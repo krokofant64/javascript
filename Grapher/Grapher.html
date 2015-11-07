@@ -1,0 +1,903 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script type="text/javascript"> 
+
+window.addEventListener("load", initScript, false);
+
+window.addEventListener("click", onMouseClick, false);
+window.addEventListener("dblclick", onMouseDoubleClick, false);
+window.addEventListener("mousedown", onMouseDown, false);
+window.addEventListener("mousemove", onMouseMove, false);
+window.addEventListener("mouseup", onMouseUp, false);
+window.addEventListener("resize", onResize, false);
+
+var ctx;
+var debug;
+var dragLastGoodPosition;
+var graph;
+var state = "Idle";
+var toolBox;
+var toolBoxImage;
+
+// ---------------------------------------------------------------------------
+// Utilities:
+// ---------------------------------------------------------------------------
+
+function getMousePos(ctx, theEvent)
+{
+   var canvas = ctx.canvas;
+   var boundingBox = canvas.getBoundingClientRect();
+   var mousePos =
+   { 
+      x: (theEvent.clientX - boundingBox.left) * (canvas.width / boundingBox.width),
+      y: (theEvent.clientY - boundingBox.top) * (canvas.height / boundingBox.height)
+   };
+   
+   return mousePos;
+}
+
+// ---------------------------------------------------------------------------
+
+function getWindowSize(theWindow)
+{
+   if (theWindow == undefined)
+   {
+      theWindow = window;
+   }
+   if (theWindow.innerWidth != null)
+   {
+      var windowSize =
+      {
+         width: theWindow.innerWidth, 
+         height: theWindow.innerHeight 
+      };
+      return windowSize;
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function valueInRange(theValue, theMin, theMax)
+{
+   return (theValue >= theMin) && (theValue <= theMax);
+}
+
+// ---------------------------------------------------------------------------
+
+function lineRectangleIntersection(
+   theLineX0,
+   theLineY0,
+   theLineX1,
+   theLineY1,
+   theRectLeft,
+   theRectTop,
+   theRectRight,
+   theRectBottom)
+{
+   var result = { intersect: false, x: 0, y: 0};
+   
+   var dx = theLineX1 - theLineX0;
+   var dy = theLineY1 - theLineY0;
+
+   if (dx == 0 && dy == 0)
+   {
+      // no line - no intersection
+      return result;
+   }   
+
+   // x = x1 + dx * tx
+   // calculate tx at the intersection point with a vertical border
+   var tx;
+   if (dx != 0) 
+   {
+      var edge = (dx < 0) ? theRectLeft : theRectRight; 
+      tx = (edge - theLineX0) / dx;
+   }
+   // y = y1 + dy * ty
+   // calculate ty at the intersection point with a vertical border
+   var ty;
+   if (dy != 0) 
+   {
+      var edge = (dy < 0) ? theRectTop : theRectBottom; 
+      ty = (edge - theLineY0) / dy;
+   }
+      
+   // take the shorter one
+   var t;
+   if (dx == 0)
+   {
+      t = ty;
+   }
+   else 
+   if (dy == 0)
+   {
+      t = tx;
+   }
+   else
+   {
+      t = Math.min(tx, ty);
+   }
+   if (t < 0)
+   {
+      // start point of line is outside rectangle
+      return result; 
+   }
+   
+   // calculate the coordinates of the intersection point.
+   if (t <= 1)
+   {
+      result.x = theLineX0 + dx * t;
+      result.y = theLineY0 + dy * t;
+      result.intersect = true;
+      return result;
+   }
+   
+   // intersection point is beyond end point of line.
+   return result;
+}
+
+// ---------------------------------------------------------------------------
+// Debug window class:
+// ---------------------------------------------------------------------------
+
+function DebugWindow(theNumberOfRows)
+{
+   this.numberOfRows = theNumberOfRows;
+   this.rows = [];
+}
+
+// ---------------------------------------------------------------------------
+
+DebugWindow.prototype.draw = function (ctx)
+{
+   ctx.save();
+   ctx.textAlign = "start";
+   ctx.textBaseline = "top"; 
+   ctx.fillStyle  = 'black';
+   for (var i = 0; i < this.rows.length; i++)
+   {      
+      ctx.fillText(this.rows[i], 10, 10 * i + 200);   
+   }
+   ctx.restore(); 
+}
+
+// ---------------------------------------------------------------------------
+
+DebugWindow.prototype.print = function (theText)
+{
+   this.rows.push(theText);
+   if (this.rows.length > this.numberOfRows)
+   {
+      this.rows.shift();
+   }
+}
+
+// ---------------------------------------------------------------------------
+// Tool box class:
+// ---------------------------------------------------------------------------
+
+function ToolBox(theImage, theSelectedTool)
+{
+   this.image = theImage;
+   this.mouseOverTool = "";
+   this.selectedTool = theSelectedTool;
+   this.tools = {};
+}
+
+// ---------------------------------------------------------------------------
+
+ToolBox.prototype.addTool = function (theTool, 
+                                      theX, 
+                                      theY, 
+                                      theWidth, 
+                                      theHeight,
+                                      theToolTip)
+{
+   this.tools[theTool] = 
+   { 
+      x:       theX, 
+      y :      theY, 
+      width:   theWidth, 
+      height:  theHeight,
+      toolTip: theToolTip
+   };
+}
+
+// ---------------------------------------------------------------------------
+
+ToolBox.prototype.draw = function (ctx)
+{
+   ctx.save();
+   for (var toolName in this.tools)
+   {
+      var tool = this.tools[toolName];
+      if (this.selectedTool == toolName)
+      {
+         ctx.fillStyle = 'Orange';
+      }
+      else
+      if (this.mouseOverTool == toolName)
+      {
+         ctx.fillStyle  = 'DarkGrey';        
+      }
+      else
+      {
+         ctx.fillStyle  = 'LightGrey';
+      }
+      ctx.fillRect(tool.x, tool.y, tool.width, tool.height);
+      ctx.drawImage(
+         this.image,
+         tool.x,
+         tool.y,
+         tool.width,
+         tool.height,                       
+         tool.x, 
+         tool.y,
+         tool.width,
+         tool.height); 
+   }
+   
+   // Draw tool tip
+   if (this.mouseOverTool in this.tools)
+   {
+      var tool = this.tools[this.mouseOverTool];
+      if (tool.toolTip)
+      {
+         ctx.font = "12px sans-serif";
+         var textMetrics = ctx.measureText(tool.toolTip);
+         ctx.fillStyle = "rgba(255, 255, 255, 1)";
+         var boxX = tool.x + tool.width + 2;
+         var boxY = tool.y + tool.height - (12 + 8); 
+         ctx.shadowOffsetX = 3;
+         ctx.shadowOffsetY = 3;
+         ctx.shadowBlur = 5;
+         ctx.shadowColor = 'black';
+         ctx.fillRect(boxX, 
+                      boxY, 
+                      textMetrics.width + 8, 
+                      12 + 8);
+         ctx.shadowOffsetX = 0;
+         ctx.shadowOffsetY = 0;
+         ctx.shadowBlur = 0;
+         ctx.strokeStyle = 'grey';  
+         ctx.lineWidth = 1;         
+         ctx.strokeRect(boxX, 
+                       boxY, 
+                       textMetrics.width + 8, 
+                       12 + 8);
+         ctx.textAlign = "center";
+         ctx.textBaseline = "middle"; 
+         ctx.fillStyle  = 'black';
+         ctx.fillText(tool.toolTip, boxX + (textMetrics.width  + 8) / 2, boxY  + (12 + 8) / 2);      
+         ctx.strokeStyle = 'black';         
+      }
+   }
+   ctx.restore();          
+}
+
+// ---------------------------------------------------------------------------
+
+ToolBox.prototype.getTool = function(theMousePos)
+{
+   for (var toolName in this.tools)
+   {
+      var tool = this.tools[toolName];
+      if (theMousePos.x >= tool.x && theMousePos.x <= tool.x + tool.width &&
+          theMousePos.y >= tool.y && theMousePos.y <= tool.y + tool.height)
+      {
+         return toolName;
+      }
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+ToolBox.prototype.onMouseClick = function(theMousePos)
+{
+   var toolName = this.getTool(theMousePos);
+   if (toolName)
+   {
+      this.selectedTool = toolName;
+      return true;
+   }
+   return false;
+}
+
+// ---------------------------------------------------------------------------
+
+ToolBox.prototype.onMouseMove = function(theMousePos)
+{
+   var mouseOverTool = this.getTool(theMousePos);
+   if (mouseOverTool != this.mouseOverTool)
+   {
+      this.mouseOverTool = mouseOverTool;
+      return true;
+   }
+   return false;
+}
+
+// ---------------------------------------------------------------------------
+// Graph class:
+// ---------------------------------------------------------------------------
+
+function Graph()
+{
+   this.nodes = [];
+   this.selectedNode = null;
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.addNode = function(theNode)
+{
+   this.nodes[this.nodes.length] = theNode;
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.deleteSelectedNode = function ()
+{
+   if (!this.selectedNode)
+   {
+      // no node selected
+      return;
+   }
+   for (var i = 0; i < this.nodes.length; i++)
+   {
+      this.nodes[i].removeChild(this.selectedNode);
+   }
+   var index = this.nodes.indexOf(this.selectedNode);
+   if (index != -1)
+   {
+      // Remove child
+      debug.print("Remove node " + this.selectedNode.text); 
+      this.nodes.splice(index, 1);
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.draw = function (ctx)
+{
+   for (var i = 0; i < this.nodes.length; i++)
+   {
+      this.nodes[i].draw(ctx, this.nodes[i] == this.selectedNode);
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.getHitNode = function (thePosition)
+{
+   for (var i = 0; i < this.nodes.length; i++)
+   {
+      if (this.nodes[i].hitTest(thePosition))
+      {
+         return this.nodes[i];
+      }
+   }
+   return null;
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.overlaps = function (theNode)
+{
+   for (var i = 0; i < this.nodes.length; i++)
+   {
+      if (this.nodes[i] != theNode)
+      {
+         if (this.nodes[i].overlaps(theNode))
+         {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+// ---------------------------------------------------------------------------
+
+Graph.prototype.selectNode = function (theNode)
+{
+   this.selectedNode = theNode;
+}
+
+// ---------------------------------------------------------------------------
+// Node class:
+// ---------------------------------------------------------------------------
+
+function Node(thePosition, theText)
+{
+   this.width = 60;
+   this.height = 20;
+   this.x = thePosition.x - this.width / 2;
+   this.y = thePosition.y + this.height / 2;
+   this.text = theText;
+   this.children = [];
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.addChild = function (theChild)
+{
+   debug.print(this.text + " addChild " + theChild.text); 
+   if (this.children.indexOf(theChild) == -1)
+   {
+      // New Child
+      this.children.push(theChild);
+      return true;
+   }
+   return false;
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.draw = function (ctx, theIsSelected)
+{
+   ctx.fillStyle = "rgba(0, 0, 200, 1)"; 
+   ctx.fillRect(this.x, 
+                this.y, 
+                this.width, 
+                this.height);
+   if (theIsSelected == true)
+   {
+      ctx.strokeStyle = "rgba(200, 0, 0, 1)";
+      ctx.strokeRect(this.x, 
+                     this.y, 
+                     this.width, 
+                     this.height);
+   }
+   ctx.textAlign = "center";
+   ctx.textBaseline = "middle"; 
+   ctx.fillStyle  = 'lightskyblue';
+   ctx.fillText(this.text, this.x + this.width / 2, this.y  + this.height / 2); 
+   ctx.fillStyle  = "rgba(200, 0, 0, 1)";
+   ctx.strokeStyle = "rgba(200, 0, 0, 1)";
+   for (var i = 0; i < this.children.length; i++)
+   {
+      this.drawArrowToNode(ctx, this.children[i]);
+   }   
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.drawArrowToNode = function (ctx, theNode)
+{
+   var startPoint = lineRectangleIntersection(this.x + this.width / 2,
+                                              this.y + this.height / 2,
+                                              theNode.x + theNode.width / 2,
+                                              theNode.y + theNode.height / 2,
+                                              this.x,
+                                              this.y,
+                                              this.x + this.width,
+                                              this.y + this.height);
+
+   var endPoint = lineRectangleIntersection(theNode.x + theNode.width / 2,
+                                            theNode.y + theNode.height / 2,
+                                            this.x + this.width / 2,
+                                            this.y + this.height / 2,
+                                            theNode.x,
+                                            theNode.y,
+                                            theNode.x + theNode.width,
+                                            theNode.y + theNode.height);
+   ctx.beginPath();
+   ctx.moveTo(startPoint.x, startPoint.y);
+   ctx.lineTo(endPoint.x, endPoint.y);
+   ctx.stroke();
+ 
+   // calculate the angle of the line
+   var length = 10;
+   var angle = Math.PI/8;
+   var lineangle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+   // h is the line length of a side of the arrow head
+   var h = Math.abs(length / Math.cos(angle));
+   var angle1 = lineangle + Math.PI + angle;
+   var topx = endPoint.x + Math.cos(angle1) * h;
+   var topy = endPoint.y + Math.sin(angle1) * h;
+   var angle2 = lineangle + Math.PI - angle;
+   var botx = endPoint.x + Math.cos(angle2) * h;
+   var boty = endPoint.y + Math.sin(angle2) * h;
+   ctx.beginPath();
+   ctx.moveTo(topx, topy);
+   ctx.lineTo(endPoint.x, endPoint.y);
+   ctx.lineTo(botx, boty);
+   // curved filled, add the bottom as an arcTo curve and fill
+   var backdist = Math.sqrt(((botx-topx)*(botx-topx))+((boty-topy)*(boty-topy)));
+   ctx.arcTo(endPoint.x,endPoint.y,topx,topy,.55*backdist);
+   ctx.fill();
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.drawArrowToPoint = function (ctx, thePoint)
+{
+   var startPoint = lineRectangleIntersection(this.x + this.width / 2,
+                                              this.y + this.height / 2,
+                                              thePoint.x,
+                                              thePoint.y,
+                                              this.x,
+                                              this.y,
+                                              this.x + this.width,
+                                              this.y + this.height);
+
+   var endPoint = thePoint;
+   ctx.beginPath();
+   ctx.moveTo(startPoint.x, startPoint.y);
+   ctx.lineTo(endPoint.x, endPoint.y);
+   ctx.stroke();
+ 
+   // calculate the angle of the line
+   var length = 10;
+   var angle = Math.PI/8;
+   var lineangle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+   // h is the line length of a side of the arrow head
+   var h = Math.abs(length / Math.cos(angle));
+   var angle1 = lineangle + Math.PI + angle;
+   var topx = endPoint.x + Math.cos(angle1) * h;
+   var topy = endPoint.y + Math.sin(angle1) * h;
+   var angle2 = lineangle + Math.PI - angle;
+   var botx = endPoint.x + Math.cos(angle2) * h;
+   var boty = endPoint.y + Math.sin(angle2) * h;
+   ctx.beginPath();
+   ctx.moveTo(topx, topy);
+   ctx.lineTo(endPoint.x, endPoint.y);
+   ctx.lineTo(botx, boty);
+   // curved filled, add the bottom as an arcTo curve and fill
+   var backdist = Math.sqrt(((botx-topx)*(botx-topx))+((boty-topy)*(boty-topy)));
+   ctx.arcTo(endPoint.x,endPoint.y,topx,topy,.55*backdist);
+   ctx.fill();
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.getPosition = function ()
+{
+   var position = { x: this.x  + this.width / 2, y: this.y + this.height / 2 };
+   return position;
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.hitTest = function (thePosition)
+{
+   if (thePosition.x < this.x || thePosition.x > this.x + this.width)
+   {
+      return false;
+   }
+   if (thePosition.y < this.y || thePosition.y > this.y + this.height)
+   {
+      return false;
+   }
+   return true;
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.moveTo = function (thePosition)
+{
+   this.x = thePosition.x - this.width / 2;
+   this.y = thePosition.y - this.height / 2;
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.overlaps = function (theNode)
+{
+   var xOverlap = valueInRange(this.x, theNode.x, theNode.x + theNode.width) ||
+                  valueInRange(theNode.x, this.x, this.x + theNode.width);   
+   var yOverlap = valueInRange(this.y, theNode.y, theNode.y + theNode.height) ||
+                  valueInRange(theNode.y, this.y, this.y + theNode.height);   
+   return xOverlap && yOverlap;
+}
+
+// ---------------------------------------------------------------------------
+
+Node.prototype.removeChild = function (theChild)
+{
+   var index = this.children.indexOf(theChild);
+   if (index != -1)
+   {
+      // Remove child
+      debug.print(this.text + " removeChild " + theChild.text); 
+      this.children.splice(index, 1);
+   }
+}
+
+// ---------------------------------------------------------------------------
+// Main program:
+// ---------------------------------------------------------------------------
+
+function draw(ctx)
+{
+   ctx.fillStyle  = 'lightskyblue';
+   ctx.strokeStyle = '0xFF00FF';
+   ctx.lineWidth = 1;
+   ctx.fillRect(0, 0, canvas.width, canvas.height);
+   graph.draw(ctx);
+   toolBox.draw(ctx);
+   debug.draw(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+function initScript()
+{
+   toolboxImage = new Image();
+   toolboxImage.src = "ToolBox.png";
+   toolboxImage.onload = onLoaded;
+}
+
+// ---------------------------------------------------------------------------
+
+function onLoaded(theEvent)
+{
+   debug = new DebugWindow(15);
+   graph = new Graph();
+   toolBox = new ToolBox(toolboxImage);
+
+   toolBox.addTool("select", 0, 0, 32, 32, "Select node");
+   toolBox.addTool("add", 0, 32, 32, 32, "Add node");
+   toolBox.addTool("connect", 32, 0, 32, 32, "Connect nodes");
+   toolBox.addTool("delete", 32, 32, 32, 32, "Delete node");
+
+   var canvas = document.getElementById("canvas");
+   if (canvas.getContext) 
+   {
+      ctx = canvas.getContext("2d");
+      var windowSize = getWindowSize();
+      canvas.width = windowSize.width - 21;
+      canvas.height = windowSize.height - 21;
+      draw(ctx);
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function onMouseClick(theEvent)
+{
+   debug.print("Click: " + state);
+   var mousePos = getMousePos(ctx, theEvent);
+   if (toolBox.onMouseClick(mousePos))
+   {
+      if (toolBox.selectedTool == "add")
+      {
+         var nodeText = prompt('Add Node:\nEnter label:', '');
+         if (nodeText)
+         {
+            var newNode = new Node(mousePos, nodeText);
+            graph.addNode(newNode);
+            graph.selectNode(newNode);
+            dragLastGoodPosition = null;
+            state = "SelectNode";
+         }
+         toolBox.selectedTool = "select";
+      }
+      else
+      if (toolBox.selectedTool == "connect")
+      {
+         graph.selectedNode = null;
+      }
+      else
+      if (toolBox.selectedTool == "delete")
+      {
+         graph.deleteSelectedNode();
+         toolBox.selectedTool = "select";
+      }
+      draw(ctx);
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function onMouseDoubleClick(theEvent)
+{
+   debug.print("Double Click IN: " + state);
+   var mousePos = getMousePos(ctx, theEvent);
+   if (toolBox.getTool(mousePos))
+   {
+      // ignore click on tool box
+      return;
+   }
+   switch (toolBox.selectedTool)
+   {
+      case "select":
+      {
+         var node = graph.getHitNode(mousePos);
+         if (node)
+         {
+            // existing node
+            draw(ctx);
+            var newText = prompt('Modify Node:\nEnter label:', node.text);
+            if (newText)
+            {   
+               node.text = newText;
+            }
+         }
+         debug.print("Double Click OUT: " + state);
+         draw(ctx);
+         break;
+      }
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function onMouseDown(theEvent)
+{
+   debug.print("Mouse down IN: " + state);
+   var mousePos = getMousePos(ctx, theEvent);
+   if (toolBox.getTool(mousePos))
+   {
+      // ignore click on tool box
+      return;
+   }
+   switch (toolBox.selectedTool)
+   {
+      case "select":
+      {
+         var node = graph.getHitNode(mousePos);
+         if (node)
+         {
+            graph.selectNode(node);
+            dragLastGoodPosition = node.getPosition();
+            state = "SelectNode";
+         }
+         else
+         {
+            state = "Idle";
+         }
+         debug.print("Mouse down OUT: " + state);
+         break;
+      }
+      case "connect":
+      {
+         var node = graph.getHitNode(mousePos);
+         if (node)
+         {
+            graph.selectNode(node);
+            state = "SelectNode";
+         }
+         else
+         {
+            state = "Idle";
+         }
+         debug.print("Mouse down OUT: " + state);
+         break;
+      }
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function onMouseMove(theEvent)
+{
+   var mousePos = getMousePos(ctx, theEvent);
+   if (toolBox.onMouseMove(mousePos))
+   {
+      draw(ctx);
+   }
+   switch (toolBox.selectedTool)
+   {
+      case "select":
+      {
+         switch (state)
+         {
+            case "SelectNode":
+            {
+               document.body.style.cursor = "move";
+               state = "DragNode";
+               // fall through
+            }
+            case "DragNode":
+            {
+               graph.selectedNode.moveTo(mousePos);
+               if (graph.overlaps(graph.selectedNode))
+               {
+                  debug.print("Overlap");
+               }
+               else
+               {
+                  dragLastGoodPosition = graph.selectedNode.getPosition();
+               }
+               draw(ctx);
+               break;
+            }
+         }
+         break;
+      }
+      case "connect":
+      {
+         draw(ctx);
+         if (graph.selectedNode)
+         {
+            var targetNode = graph.getHitNode(mousePos);
+            if (targetNode)
+            {
+               if (targetNode != graph.selectedNode)
+               {
+                  graph.selectedNode.drawArrowToNode(ctx, targetNode);
+               }
+            }
+            else
+            {
+               graph.selectedNode.drawArrowToPoint(ctx, mousePos);
+            }
+         }
+         break;
+      }
+   }
+}
+
+// ---------------------------------------------------------------------------
+
+function onMouseUp(theEvent)
+{
+   debug.print("Mouse up IN: " + state);
+   var mousePos = getMousePos(ctx, theEvent);
+   if (toolBox.getTool(mousePos))
+   {
+      // ignore click on tool box
+      return;
+   }
+   switch (toolBox.selectedTool)
+   {
+      case "select":
+      {
+         switch (state)
+         {
+            case "DragNode":
+            case "SelectNode":
+            {
+               if (graph.overlaps(graph.selectedNode))
+               {
+                  debug.print("Overlap");
+                  graph.selectedNode.moveTo(dragLastGoodPosition);
+               }
+               document.body.style.cursor = "default";
+               state = "Idle";
+               break;
+            }
+         }
+         if  (!graph.getHitNode(mousePos))
+         {
+            graph.selectedNode = null;
+         }
+         break;
+      }
+      case "connect":
+      {
+         var targetNode = graph.getHitNode(mousePos);
+         if (targetNode && targetNode != graph.selectedNode)
+         {
+            graph.selectedNode.addChild(targetNode);
+         }
+         graph.selectedNode = null;
+         break;
+      }
+   }
+   debug.print("Mouse up OUT: " + state);
+   draw(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+function onResize(theEvent)
+{
+   var windowSize = getWindowSize();
+   var canvas = ctx.canvas;
+   canvas.width = windowSize.width - 21;
+   canvas.height = windowSize.height - 21;
+   draw(ctx);
+}
+
+// ---------------------------------------------------------------------------
+
+</script>
+</head>
+<body>
+<canvas id="canvas" width="640" height="480"></canvas>
+</body>
+</html>
