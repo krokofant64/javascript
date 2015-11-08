@@ -277,27 +277,66 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
 
    theCtx.strokeStyle = this.foregroundColor;
    theCtx.fillStyle = this.foregroundColor;
-   theCtx.textAlign = "right";
-   theCtx.textBaseline = "middle";
+   theCtx.save();
+   theCtx.lineWidth = 2;
    theCtx.beginPath();
    theCtx.moveTo(0.5, 0.5);
    theCtx.lineTo(0.5, -yLength - 0.5);
-   theCtx.stroke();
    theCtx.moveTo(0.5, 0.5);
    theCtx.lineTo(xLength + 0.5, 0.5);
+   theCtx.stroke();
+   theCtx.restore();
 
+   // Draw Y-grid lines
+   theCtx.save();
+   theCtx.lineWidth = 1;
+   theCtx.beginPath();
    for (var i = 0; i <= yAxisInfo.numberOfTicks; i++)
    {
-      var label = this.valueToString(yAxisInfo.tickDistance * i + this.startValue, yAxisInfo.numberOfDecimals);
-      var y = Math.floor(i * yLength/(yAxisInfo.numberOfTicks));
+      var y = Math.floor(i * yLength / (yAxisInfo.numberOfTicks));
+      theCtx.moveTo(0.5, -y + 0.5);
+      theCtx.lineTo(0.5 + xLength, -y + 0.5);
+   }
+   theCtx.stroke();
+   theCtx.restore();
+
+   // Draw Y-axis ticks and labels
+   theCtx.save();
+   theCtx.textAlign = "right";
+   theCtx.textBaseline = "middle";
+   theCtx.lineWidth = 2;
+   theCtx.beginPath();
+   for (var i = 0; i <= yAxisInfo.numberOfTicks; i++)
+   {
+      var y = Math.floor(i * yLength / (yAxisInfo.numberOfTicks));
       theCtx.moveTo(0.5, -y + 0.5);
       theCtx.lineTo(0.5 - this.tickLength, -y + 0.5);
+      var label = this.valueToString(yAxisInfo.tickDistance * i + this.startValue, yAxisInfo.numberOfDecimals);
       theCtx.fillText(label, 0.5 - this.tickLength - 2, -y - 0.5);
-      theCtx.stroke();
    }
+   theCtx.stroke();
+   theCtx.restore();
 
+   // Draw X-grid lines
+   theCtx.save();
+   theCtx.lineWidth = 1;
+   theCtx.beginPath();
+   for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
+   {
+      var currentTime = xAxisInfo.tickDistance * i + this.startTime
+      var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
+      theCtx.moveTo(x + 0.5, 0.5);
+      theCtx.lineTo(x + 0.5, 0.5 + -yLength);
+   }
+   theCtx.stroke();
+   theCtx.restore();
+
+   // Draw X-axis ticks and labels
+   theCtx.save();
    theCtx.textAlign = "end";
    theCtx.textBaseline = "middle";
+   theCtx.lineWidth = 2;
+   theCtx.beginPath();
    var previousTime = 0;
    for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
    {
@@ -307,14 +346,17 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
       previousTime = currentTime;
       theCtx.moveTo( x + 0.5, 0.5);
       theCtx.lineTo( x + 0.5, 0.5 + this.tickLength);
-      theCtx.stroke();
       theCtx.save();
       theCtx.translate(x + 0.5 ,
                        0.5 + this.tickLength + 2);  
       theCtx.rotate(-90*Math.PI/180);
       theCtx.fillText(label, 0 , 0);
       theCtx.restore();
-   }   
+   }
+   theCtx.stroke();
+   theCtx.restore();
+
+   // Draw the data series
    theCtx.save();
    var previous  = {};
    if ("data" in this)
@@ -350,7 +392,7 @@ LineChart.prototype.addData = function (theColor, theValue, theTime)
    }
    else
    {
-      time = theTime; 
+      time = theTime - (new Date()).getTimezoneOffset() * 60 * 1000; 
    }
    if (!this.data)
    {
