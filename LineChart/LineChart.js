@@ -254,7 +254,7 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
    theCtx.fillStyle = this.backgroundColor;
    theCtx.rect(theXPos, theYPos, theXPos + this.width, theYPos + this.height);
    theCtx.fill();
-   var labelWidthX = ctx.measureText("9 999 999").width;
+   var labelWidthX = ctx.measureText(" 9 999 999 999").width;
    var zeroOffsetX = this.leftMargin + labelWidthX + this.tickLength + 2;
    var xLength = this.width - zeroOffsetX - this.rightMargin;
    var labelWidthY = ctx.measureText("9999-99-99 23:59:59.999").width;
@@ -317,28 +317,26 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
    }   
    theCtx.save();
    var previous  = {};
-   for (var color in this.data)
+   if ("data" in this)
    {
-/*
-      theCtx.shadowColor = "black";
-      theCtx.shadowBlur = 5;
-      theCtx.shadowOffsetX = 1;
-      theCtx.shadowOffsetY = 1; */
-      theCtx.strokeStyle = color;
-      theCtx.beginPath();
-      for (var time in this.data[color])
+      for (var color in this.data)
       {
-         var value = this.data[color][time].value;
-         var x = (time - this.startTime) / timeRange * xLength;
-         var y = (value - this.startValue) / range * yLength;
-         if (color in previous)
+         theCtx.strokeStyle = color;
+         theCtx.beginPath();
+         for (var time in this.data[color])
          {
-            theCtx.moveTo(previous[color].x, -previous[color].y);
-            theCtx.lineTo(x, -y);
+            var value = this.data[color][time].value;
+            var x = (time - this.startTime) / timeRange * xLength;
+            var y = (value - this.startValue) / range * yLength;
+            if (color in previous)
+            {
+               theCtx.moveTo(previous[color].x, -previous[color].y);
+               theCtx.lineTo(x, -y);
+            }
+            previous[color] = {x : x, y : y };
          }
-         previous[color] = {x : x, y : y };
+         theCtx.stroke();
       }
-      theCtx.stroke();
    }
    theCtx.restore();
 };
@@ -384,5 +382,27 @@ LineChart.prototype.addData = function (theColor, theValue, theTime)
    if (theValue > this.endValue)
    {
       this.endValue = theValue;
+   }
+}
+
+LineChart.prototype.reset = function ()
+{
+   delete this.data;
+}
+
+LineChart.prototype.removeOldEntries = function (theTime)
+{
+   if ("data" in this)
+   {
+      for (var color in this.data)
+      {
+         for (var time in this.data[color])
+         {
+            if (time < theTime)
+            {
+               delete this.data[color][time];
+            }
+         }
+      }
    }
 }
