@@ -7,6 +7,37 @@ function valueInRange(theValue, theMin, theMax)
 
 // ---------------------------------------------------------------------------
 
+function drawArrow(theStartPoint, theEndPoint)
+{
+   ctx.beginPath();
+   ctx.moveTo(theStartPoint.x, theStartPoint.y);
+   ctx.lineTo(theEndPoint.x, theEndPoint.y);
+   ctx.stroke();
+
+   // calculate the angle of the line
+   var length = 10;
+   var angle = Math.PI / 8;
+   var lineangle = Math.atan2(theEndPoint.y - theStartPoint.y, theEndPoint.x - theStartPoint.x);
+   // h is the line length of a side of the arrow head
+   var h = Math.abs(length / Math.cos(angle));
+   var angle1 = lineangle + Math.PI + angle;
+   var topx = theEndPoint.x + Math.cos(angle1) * h;
+   var topy = theEndPoint.y + Math.sin(angle1) * h;
+   var angle2 = lineangle + Math.PI - angle;
+   var botx = theEndPoint.x + Math.cos(angle2) * h;
+   var boty = theEndPoint.y + Math.sin(angle2) * h;
+   ctx.beginPath();
+   ctx.moveTo(topx, topy);
+   ctx.lineTo(theEndPoint.x, theEndPoint.y);
+   ctx.lineTo(botx, boty);
+   // curved filled, add the bottom as an arcTo curve and fill
+   var backdist = Math.sqrt(((botx - topx) * (botx - topx)) + ((boty - topy) * (boty - topy)));
+   ctx.arcTo(theEndPoint.x, theEndPoint.y, topx, topy, .55 * backdist);
+   ctx.fill();
+}
+
+// ---------------------------------------------------------------------------
+
 function lineRectangleIntersection(
    theLineX0,
    theLineY0,
@@ -244,31 +275,8 @@ Node.prototype.drawArrowToNode = function (ctx, theNode)
                                             theNode.y,
                                             theNode.x + theNode.width,
                                             theNode.y + theNode.height);
-   ctx.beginPath();
-   ctx.moveTo(startPoint.x, startPoint.y);
-   ctx.lineTo(endPoint.x, endPoint.y);
-   ctx.stroke();
- 
-   // calculate the angle of the line
-   var length = 10;
-   var angle = Math.PI/8;
-   var lineangle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
-   // h is the line length of a side of the arrow head
-   var h = Math.abs(length / Math.cos(angle));
-   var angle1 = lineangle + Math.PI + angle;
-   var topx = endPoint.x + Math.cos(angle1) * h;
-   var topy = endPoint.y + Math.sin(angle1) * h;
-   var angle2 = lineangle + Math.PI - angle;
-   var botx = endPoint.x + Math.cos(angle2) * h;
-   var boty = endPoint.y + Math.sin(angle2) * h;
-   ctx.beginPath();
-   ctx.moveTo(topx, topy);
-   ctx.lineTo(endPoint.x, endPoint.y);
-   ctx.lineTo(botx, boty);
-   // curved filled, add the bottom as an arcTo curve and fill
-   var backdist = Math.sqrt(((botx-topx)*(botx-topx))+((boty-topy)*(boty-topy)));
-   ctx.arcTo(endPoint.x,endPoint.y,topx,topy,.55*backdist);
-   ctx.fill();
+
+   drawArrow(startPoint, endPoint);
 }
 
 // ---------------------------------------------------------------------------
@@ -284,32 +292,7 @@ Node.prototype.drawArrowToPoint = function (ctx, thePoint)
                                               this.x + this.width,
                                               this.y + this.height);
 
-   var endPoint = thePoint;
-   ctx.beginPath();
-   ctx.moveTo(startPoint.x, startPoint.y);
-   ctx.lineTo(endPoint.x, endPoint.y);
-   ctx.stroke();
- 
-   // calculate the angle of the line
-   var length = 10;
-   var angle = Math.PI/8;
-   var lineangle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
-   // h is the line length of a side of the arrow head
-   var h = Math.abs(length / Math.cos(angle));
-   var angle1 = lineangle + Math.PI + angle;
-   var topx = endPoint.x + Math.cos(angle1) * h;
-   var topy = endPoint.y + Math.sin(angle1) * h;
-   var angle2 = lineangle + Math.PI - angle;
-   var botx = endPoint.x + Math.cos(angle2) * h;
-   var boty = endPoint.y + Math.sin(angle2) * h;
-   ctx.beginPath();
-   ctx.moveTo(topx, topy);
-   ctx.lineTo(endPoint.x, endPoint.y);
-   ctx.lineTo(botx, boty);
-   // curved filled, add the bottom as an arcTo curve and fill
-   var backdist = Math.sqrt(((botx-topx)*(botx-topx))+((boty-topy)*(boty-topy)));
-   ctx.arcTo(endPoint.x,endPoint.y,topx,topy,.55*backdist);
-   ctx.fill();
+   drawArrow(startPoint, thePoint);
 }
 
 // ---------------------------------------------------------------------------
