@@ -1,8 +1,76 @@
+function distancePointPoint(thePoint1, thePoint2)
+{
+   var dx = (thePoint2.x - thePoint1.x);
+   var dy = (thePoint2.y - thePoint1.y);
+   return Math.sqrt(dx * dx + dy * dy);
+}
+
 // ---------------------------------------------------------------------------
 
-function valueInRange(theValue, theMin, theMax)
+function drawCurveWithArrow(theStartPoint, theEndPoint)
 {
-   return (theValue >= theMin) && (theValue <= theMax);
+   // See www.tbrady.org Android-Draw-a-Curved-Line
+   // arc is 1/10th of the circle
+   var a1 = 36 * Math.PI / 180;
+
+   // l1 is half the length of the line from theStartPoint to theEndPoint
+   var dx = (theEndPoint.x - theStartPoint.x);
+   var dy = (theEndPoint.y - theStartPoint.y);
+   var l = Math.sqrt(dx * dx + dy * dy);
+   var l1 = l / 2;
+
+   // h is length of the line from the middle of the connecting line to the 
+   // center of the circle.
+   var h = l1 / Math.tan(a1 / 2);
+
+   // r is the radius of the circle
+   var r = l1 / Math.sin(a1 / 2);
+
+   // a2 is the angle at which L intersects the x axis
+   var a2 = Math.atan2(dy, dx);
+
+   // a3 is the angle at which H intersects the x axis
+   var a3 = (Math.PI / 2.0) - a2;
+
+   // m is the midpoint of the line from e1 to e2
+   var mX = (theStartPoint.x + theEndPoint.x) / 2.0;
+   var mY = (theStartPoint.y + theEndPoint.y) / 2.0;
+
+   // c is the the center of the circle
+   var cY = mY + (h * Math.sin(a3));
+   var cX = mX - (h * Math.cos(a3));
+
+   // a4 is the starting sweep angle
+   var a4 = Math.atan2(theStartPoint.y - cY, theStartPoint.x - cX);
+
+   ctx.beginPath();
+   ctx.arc(cX, cY, r, a4, a4 + a1);
+   ctx.stroke();
+
+   var lastSegmentAngle = a4 + a1 - 3 * Math.PI / 180;
+   var startPointX = Math.cos(lastSegmentAngle) * r + cX;
+   var startPointY = Math.sin(lastSegmentAngle) * r + cY;
+
+   // calculate the angle of the line
+   var length = 10;
+   var angle = Math.PI / 8;
+   var lineangle = Math.atan2(theEndPoint.y - startPointY, theEndPoint.x - startPointX);
+   // h is the line length of a side of the arrow head
+   var h = Math.abs(length / Math.cos(angle));
+   var angle1 = lineangle + Math.PI + angle;
+   var topx = theEndPoint.x + Math.cos(angle1) * h;
+   var topy = theEndPoint.y + Math.sin(angle1) * h;
+   var angle2 = lineangle + Math.PI - angle;
+   var botx = theEndPoint.x + Math.cos(angle2) * h;
+   var boty = theEndPoint.y + Math.sin(angle2) * h;
+   ctx.beginPath();
+   ctx.moveTo(topx, topy);
+   ctx.lineTo(theEndPoint.x, theEndPoint.y);
+   ctx.lineTo(botx, boty);
+   // curved filled, add the bottom as an arcTo curve and fill
+   var backdist = Math.sqrt(((botx - topx) * (botx - topx)) + ((boty - topy) * (boty - topy)));
+   ctx.arcTo(theEndPoint.x, theEndPoint.y, topx, topy, .55 * backdist);
+   ctx.fill();
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +176,13 @@ function lineRectangleIntersection(
    
    // intersection point is beyond end point of line.
    return result;
+}
+
+// ---------------------------------------------------------------------------
+
+function valueInRange(theValue, theMin, theMax)
+{
+   return (theValue >= theMin) && (theValue <= theMax);
 }
 
 // ---------------------------------------------------------------------------
@@ -276,7 +351,14 @@ Node.prototype.drawArrowToNode = function (ctx, theNode)
                                             theNode.x + theNode.width,
                                             theNode.y + theNode.height);
 
-   drawArrow(startPoint, endPoint);
+   if (theNode.hasChild(this))
+   {
+      drawCurveWithArrow(startPoint, endPoint);
+   }
+   else
+   {
+      drawArrow(startPoint, endPoint);
+   }
 }
 
 // ---------------------------------------------------------------------------
@@ -303,6 +385,20 @@ Node.prototype.getPosition = function ()
    return position;
 }
 
+// ---------------------------------------------------------------------------
+
+Node.prototype.hasChild = function (theChild)
+{
+   for (var i = 0; i < this.children.length; i++)
+   {
+      if (this.children[i] == theChild)
+      {
+         return true;
+      }
+   }
+   return false;
+}
+   
 // ---------------------------------------------------------------------------
 
 Node.prototype.hitTest = function (thePosition)
