@@ -1,3 +1,44 @@
+function distancePointLineSegment(thePoint, theStartPoint, theEndPoint)
+{
+   var A = thePoint.x - theStartPoint.x;
+   var B = thePoint.y - theStartPoint.y;
+   var C = theEndPoint.x - theStartPoint.x;
+   var D = theEndPoint.y - theStartPoint.y;
+
+   var dot = A * C + B * D;
+   var len_sq = C * C + D * D;
+   var param = -1;
+   if (len_sq != 0)
+   {
+      param = dot / len_sq;
+   }
+
+   var xx, yy;
+
+   if (param < 0)
+   {
+      xx = theStartPoint.x;
+      yy = theStartPoint.y;
+   }
+   else
+   if (param > 1)
+   {
+      xx = theEndPoint.x;
+      yy = theEndPoint.y;
+   }
+   else
+   {
+      xx = theStartPoint.x + param * C;
+      yy = theStartPoint.y + param * D;
+   }
+
+   var dx = x - xx;
+   var dy = y - yy;
+   return Math.sqrt(dx * dx + dy * dy);
+}
+
+// ---------------------------------------------------------------------------
+
 function distancePointPoint(thePoint1, thePoint2)
 {
    var dx = (thePoint2.x - thePoint1.x);

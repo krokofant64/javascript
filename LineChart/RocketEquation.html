@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tsiolkovsky Rocket Equation</title>
+<script src='LineChart.js'></script>
+
+<style>
+.fieldName
+{
+   width: 400px;
+}
+.fieldValue
+{
+   float: right;
+   width: 150px;
+}
+</style>
+</head>
+<body>
+<h1>Tsiolkovsky Rocket Equation</h1>
+   <canvas id="myCanvas" width="600" height="400" style="border:1px solid #d3d3d3;">
+      Your browser does not support the HTML5 canvas tag.
+   </canvas>
+
+<div>
+<fieldset>
+   <legend>Red Rocket</legend>
+   <div class="fieldName">Inital mass m<sub>0</sub> [kg]:<input class="fieldValue" type="number" value="5000" id="m0_1" min="1"></div>
+   <div class="fieldName">Final mass m<sub>1</sub> [kg]:<input class="fieldValue" type="number" value="2000" id="m1_1" min="1"></div>
+   <div class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:<input class="fieldValue" type="number" value="2500" id="ve_1" min="1"></div>
+   <div class="fieldName">Burning time [s]:<input class="fieldValue" type="number" value="120" id="t_1" min="1"></div>
+</fieldset>
+</div>
+<div>
+<fieldset>
+   <legend>White Rocket</legend>
+   <div class="fieldName">Inital mass m<sub>0</sub> [kg]:<input class="fieldValue" type="number" value="5000" id="m0_2" min="1"></div>
+   <div class="fieldName">Final mass m<sub>1</sub> [kg]:<input class="fieldValue" type="number" value="2000" id="m1_2" min="1"></div>
+   <div class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:<input class="fieldValue" type="number" value="4400" id="ve_2" min="1"></div>
+   <div class="fieldName">Burning time [s]:<input class="fieldValue" type="number" value="120" id="t_2" min="1"></div>
+</fieldset>
+</div>
+<button onclick="drawChart()">Draw</button>
+
+<script>
+
+   function flyRocket(theM0, theM1, theVe, theBurningTime, theStartTime, theChart, theColor)
+   {
+      var dt = 1;
+      var s = 0;
+      var dm = (theM0 - theM1) / theBurningTime;
+      var v = 0;
+      var t = 0;
+      var t0 = theStartTime.getTime();
+
+      // Lift
+      while (theM0 > theM1)
+      {
+         var dv = theVe * Math.log(theM0 / (theM0 - (dm / dt)));
+         theM0 -= dm / dt;
+         v += dv - dt * 9.81;
+         s += v * dt;
+         t += dt;
+         theChart.addData(theColor, s, t0 + t * 1000); // add data to chart
+      }
+
+      // Fall
+      while (s > 0)
+      {
+         v -= dt * 9.81;
+         s += v * dt;
+         t += dt;
+         if (s < 0)
+         {
+            s = 0;
+         }
+         theChart.addData(theColor, s, t0 + t * 1000); // add data to chart
+      }
+   }
+
+   function drawChart()
+   {
+      // Create chart
+      var chart = new LineChart();
+
+      var currentTime = new Date()
+
+      // Red rocket
+      var m0 = document.getElementById("m0_1").value;
+      var m1 = document.getElementById("m1_1").value;
+      var ve = document.getElementById("ve_1").value;
+      var burningTime = document.getElementById("t_1").value;
+
+      flyRocket(m0, m1, ve, burningTime, currentTime, chart, "red");
+
+      // White rocket
+      m0 = document.getElementById("m0_2").value;
+      m1 = document.getElementById("m1_2").value;
+      ve = document.getElementById("ve_2").value;
+      burningTime = document.getElementById("t_2").value;
+
+      flyRocket(m0, m1, ve, burningTime, currentTime, chart, "white");
+
+      // Draw chart
+      chart.backgroundColor = "#7ecefd";
+      chart.foregroundColor = "#29475f";
+
+      chart.draw(document.getElementById("myCanvas"));
+   }
+</script>
+</body>
+</html>

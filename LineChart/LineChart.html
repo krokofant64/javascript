@@ -1,74 +1,57 @@
 <!DOCTYPE html>
 <html>
+<head>
+   <title>Random Ticker</title>
+</head>   
 <body>
 
-<canvas id="myCanvas" width="620" height="620" style="border:1px solid #d3d3d3;">
-Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="myCanvas" width="600" height="400" style="border:1px solid #d3d3d3;">
+   Your browser does not support the HTML5 canvas tag.
+</canvas>
 <script src='LineChart.js'></script>
 <script>
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
 
-var chart = new LineChart();
+   function updateChart()
+   {
+      var currentTime = new Date();
+      redCurve += Math.random() - 0.5;
+      chart.addData("red", redCurve, currentTime); // add data to chart
 
-var tmax = 10 * 60;
-var dt = 1;
-var s = 0;
-var mRocketEmpty = 1000;
-var burningTime = 2 * 60;
-var ve = 4000;
-var m0 = 5000;
-var dm = (m0 - mRocketEmpty) / burningTime;
-var v = 0;
-var t = 0;
-//chart.addData("red", 0, 0);
-var d = new Date();
-var t0 = d.getTime();
-while (m0 > mRocketEmpty)
-{
-   var dv = ve * Math.log (m0/(m0 - (dm/dt)));
-   m0 -= dm/dt;
-   v += dv - dt * 9.81;
-   s += v * dt;
-   t += dt;
-   chart.addData("red", s, t0 + t * 1000);
-}
-while (t < tmax)
-{
-   v -= dt * 9.81;
-   s += v * dt;
-   t += dt;
-   chart.addData("red", s, t0 + t * 1000);
-}
+      blueCurve += Math.random() - 0.5;
+      chart.addData("blue", blueCurve, currentTime); // add data to chart
 
-var burningTime = 0.2 * 60;
-m0 = 5000;
-var dm = (m0 - mRocketEmpty) / burningTime;
-s = 0;
-v = 0;
-t = 0;
-while (m0 > mRocketEmpty)
-{
-   var dv = ve * Math.log (m0/(m0 - (dm/dt)));
-   m0 -= dm/dt;
-   v += dv - dt * 9.81;
-   s += v * dt;
-   t += dt;
-   chart.addData("white", s, t0 + t * 1000);
-}
-while (t < tmax)
-{
-   v -= dt * 9.81;
-   s += v * dt;
-   t += dt;
-   chart.addData("white", s, t0 + t * 1000);
-}
-chart.backgroundColor = "#7ecefd";
-chart.foregroundColor = "#29475f";
+      greenCurve += Math.random() - 0.5;
+      chart.addData("green", greenCurve, currentTime); // add data to chart
 
-chart.draw(ctx, 10, 10);
+      // Draw chart
+      chart.draw(document.getElementById("myCanvas"));
 
-</script>
+      chart.removeOldEntries(currentTime.getTime() - 10000); // Limit graph to last 10 seconds
+
+      setTimeout(updateChart, 1000);
+   }
+
+   var currentTime = new Date();
+
+   // Create chart
+   var chart = new LineChart();
+   chart.backgroundColor = "#7ecefd";
+   chart.foregroundColor = "#29475f";
+
+   var redCurve = (Math.random() * 10) + 1;
+   chart.addData("red", redCurve, currentTime); // add data to chart
+
+   var blueCurve = (Math.random() * 10) + 1;
+   chart.addData("blue", blueCurve, currentTime); // add data to chart
+
+   var greenCurve = (Math.random() * 10) + 1;
+   chart.addData("green", greenCurve, currentTime); // add data to chart
+
+   // Draw chart
+   chart.draw(document.getElementById("myCanvas"));
+
+   setTimeout(updateChart, 1000);
+   </script>
 
 </body>
 </html>

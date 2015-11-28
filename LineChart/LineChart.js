@@ -1,7 +1,5 @@
 function LineChart()
 {
-   this.width = 600;
-   this.height = 600;
    this.tickLength = 5;
    this.leftMargin = 10;
    this.rightMargin = 10;
@@ -245,23 +243,74 @@ LineChart.prototype.timeTickInfo = function (theRange, theAxisLength, theTickDis
    return result;
 };
 
-LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
+LineChart.prototype.findLimits = function ()
+{
+   this.startTime = undefined;
+   this.endTime = undefined;
+   this.startValue = undefined;
+   this.endValue = undefined;
+   if (!this.data)
+   {
+      return;
+   }
+   for (var color in this.data)
+   {
+      for (var time in this.data[color])
+      {
+         if (this.startTime == undefined)
+         {
+            this.startTime = time;
+            this.endTime = time;
+            this.startValue = this.data[color][time].value;
+            this.endValue = this.data[color][time].value;
+         }
+         else
+         {
+            if (time < this.startTime)
+            {
+               this.startTime = time;
+            }
+            else
+            if (time > this.endTime)
+            {
+               this.endTime = time;
+            }
+            if (this.data[color][time].value < this.startValue)
+            {
+               this.startValue = this.data[color][time].value;
+            }
+            else
+            if (this.data[color][time].value > this.endValue)
+            {
+               this.endValue = this.data[color][time].value;
+            }
+         }
+      }
+   }
+};
+
+LineChart.prototype.draw = function (theCanvas)
 {
    if (!this.data)
    {
       return;
    }
-   theCtx.fillStyle = this.backgroundColor;
-   theCtx.rect(theXPos, theYPos, theXPos + this.width, theYPos + this.height);
-   theCtx.fill();
+   var ctx = theCanvas.getContext("2d");
+   ctx.save();
+   this.width = theCanvas.width;
+   this.height = theCanvas.height;
+
+   ctx.fillStyle = this.backgroundColor;
+   ctx.rect(0, 0, this.width, this.height);
+   ctx.fill();
    var labelWidthX = ctx.measureText(" 9 999 999 999").width;
    var zeroOffsetX = this.leftMargin + labelWidthX + this.tickLength + 2;
    var xLength = this.width - zeroOffsetX - this.rightMargin;
    var labelWidthY = ctx.measureText("9999-99-99 23:59:59.999").width;
    var zeroOffsetY = this.bottomMargin + labelWidthY + this.tickLength + 2;
    var yLength = this.height - zeroOffsetY - this.topMargin;
-   theCtx.translate(theXPos + zeroOffsetX,
-                    theYPos + this.height - zeroOffsetY);  
+   ctx.translate(zeroOffsetX,
+                 this.height - zeroOffsetY);  
 
    var range = this.endValue - this.startValue;
    var yAxisInfo = this.numberTicInfo(range, yLength, this.tickDistanceY);
@@ -275,68 +324,68 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
    timeRange = this.endTime - this.startTime
    xAxisInfo = this.timeTickInfo(timeRange, xLength, this.tickDistanceX);
 
-   theCtx.strokeStyle = this.foregroundColor;
-   theCtx.fillStyle = this.foregroundColor;
-   theCtx.save();
-   theCtx.lineWidth = 2;
-   theCtx.beginPath();
-   theCtx.moveTo(0.5, 0.5);
-   theCtx.lineTo(0.5, -yLength - 0.5);
-   theCtx.moveTo(0.5, 0.5);
-   theCtx.lineTo(xLength + 0.5, 0.5);
-   theCtx.stroke();
-   theCtx.restore();
+   ctx.strokeStyle = this.foregroundColor;
+   ctx.fillStyle = this.foregroundColor;
+   ctx.save();
+   ctx.lineWidth = 2;
+   ctx.beginPath();
+   ctx.moveTo(0.5, 0.5);
+   ctx.lineTo(0.5, -yLength - 0.5);
+   ctx.moveTo(0.5, 0.5);
+   ctx.lineTo(xLength + 0.5, 0.5);
+   ctx.stroke();
+   ctx.restore();
 
    // Draw Y-grid lines
-   theCtx.save();
-   theCtx.lineWidth = 1;
-   theCtx.beginPath();
+   ctx.save();
+   ctx.lineWidth = 1;
+   ctx.beginPath();
    for (var i = 0; i <= yAxisInfo.numberOfTicks; i++)
    {
       var y = Math.floor(i * yLength / (yAxisInfo.numberOfTicks));
-      theCtx.moveTo(0.5, -y + 0.5);
-      theCtx.lineTo(0.5 + xLength, -y + 0.5);
+      ctx.moveTo(0.5, -y + 0.5);
+      ctx.lineTo(0.5 + xLength, -y + 0.5);
    }
-   theCtx.stroke();
-   theCtx.restore();
+   ctx.stroke();
+   ctx.restore();
 
    // Draw Y-axis ticks and labels
-   theCtx.save();
-   theCtx.textAlign = "right";
-   theCtx.textBaseline = "middle";
-   theCtx.lineWidth = 2;
-   theCtx.beginPath();
+   ctx.save();
+   ctx.textAlign = "right";
+   ctx.textBaseline = "middle";
+   ctx.lineWidth = 2;
+   ctx.beginPath();
    for (var i = 0; i <= yAxisInfo.numberOfTicks; i++)
    {
       var y = Math.floor(i * yLength / (yAxisInfo.numberOfTicks));
-      theCtx.moveTo(0.5, -y + 0.5);
-      theCtx.lineTo(0.5 - this.tickLength, -y + 0.5);
+      ctx.moveTo(0.5, -y + 0.5);
+      ctx.lineTo(0.5 - this.tickLength, -y + 0.5);
       var label = this.valueToString(yAxisInfo.tickDistance * i + this.startValue, yAxisInfo.numberOfDecimals);
-      theCtx.fillText(label, 0.5 - this.tickLength - 2, -y - 0.5);
+      ctx.fillText(label, 0.5 - this.tickLength - 2, -y - 0.5);
    }
-   theCtx.stroke();
-   theCtx.restore();
+   ctx.stroke();
+   ctx.restore();
 
    // Draw X-grid lines
-   theCtx.save();
-   theCtx.lineWidth = 1;
-   theCtx.beginPath();
+   ctx.save();
+   ctx.lineWidth = 1;
+   ctx.beginPath();
    for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
    {
       var currentTime = xAxisInfo.tickDistance * i + this.startTime
       var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
-      theCtx.moveTo(x + 0.5, 0.5);
-      theCtx.lineTo(x + 0.5, 0.5 + -yLength);
+      ctx.moveTo(x + 0.5, 0.5);
+      ctx.lineTo(x + 0.5, 0.5 + -yLength);
    }
-   theCtx.stroke();
-   theCtx.restore();
+   ctx.stroke();
+   ctx.restore();
 
    // Draw X-axis ticks and labels
-   theCtx.save();
-   theCtx.textAlign = "end";
-   theCtx.textBaseline = "middle";
-   theCtx.lineWidth = 2;
-   theCtx.beginPath();
+   ctx.save();
+   ctx.textAlign = "end";
+   ctx.textBaseline = "middle";
+   ctx.lineWidth = 2;
+   ctx.beginPath();
    var previousTime = 0;
    for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
    {
@@ -344,27 +393,27 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
       var label = this.timeToString(currentTime, previousTime, xAxisInfo.unit);
       var x = Math.floor(i * xLength/(xAxisInfo.numberOfTicks));
       previousTime = currentTime;
-      theCtx.moveTo( x + 0.5, 0.5);
-      theCtx.lineTo( x + 0.5, 0.5 + this.tickLength);
-      theCtx.save();
-      theCtx.translate(x + 0.5 ,
+      ctx.moveTo( x + 0.5, 0.5);
+      ctx.lineTo( x + 0.5, 0.5 + this.tickLength);
+      ctx.save();
+      ctx.translate(x + 0.5 ,
                        0.5 + this.tickLength + 2);  
-      theCtx.rotate(-90*Math.PI/180);
-      theCtx.fillText(label, 0 , 0);
-      theCtx.restore();
+      ctx.rotate(-90*Math.PI/180);
+      ctx.fillText(label, 0 , 0);
+      ctx.restore();
    }
-   theCtx.stroke();
-   theCtx.restore();
+   ctx.stroke();
+   ctx.restore();
 
    // Draw the data series
-   theCtx.save();
+   ctx.save();
    var previous  = {};
    if ("data" in this)
    {
       for (var color in this.data)
       {
-         theCtx.strokeStyle = color;
-         theCtx.beginPath();
+         ctx.strokeStyle = color;
+         ctx.beginPath();
          for (var time in this.data[color])
          {
             var value = this.data[color][time].value;
@@ -372,15 +421,16 @@ LineChart.prototype.draw = function (theCtx, theXPos, theYPos)
             var y = (value - this.startValue) / range * yLength;
             if (color in previous)
             {
-               theCtx.moveTo(previous[color].x, -previous[color].y);
-               theCtx.lineTo(x, -y);
+               ctx.moveTo(previous[color].x, -previous[color].y);
+               ctx.lineTo(x, -y);
             }
             previous[color] = {x : x, y : y };
          }
-         theCtx.stroke();
+         ctx.stroke();
       }
    }
-   theCtx.restore();
+   ctx.restore();
+   ctx.restore();
 };
 
 LineChart.prototype.addData = function (theColor, theValue, theTime)
@@ -447,4 +497,5 @@ LineChart.prototype.removeOldEntries = function (theTime)
          }
       }
    }
+   this.findLimits();
 }
