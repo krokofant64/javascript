@@ -1,47 +1,75 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
 <title>Tsiolkovsky Rocket Equation</title>
 <script src='LineChart.js'></script>
 
 <style>
+canvas 
+{
+    border: 5px solid #1F497D;
+    padding: 15px;
+}
+
+fieldset 
+{
+    font-family: sans-serif;
+    border: 5px solid #1F497D;
+    background: #ddd;
+    padding: 15px;
+    width:440px;
+    float:left;
+}
+
+fieldset legend {
+    background: #1F497D;
+    color: #fff;
+    padding: 5px 10px ;
+    font-size: 20px;
+    margin-left: 20px;
+}
+
 .fieldName
 {
-   width: 400px;
+    clear:left;
+    display:block;
+    float:left;
+    margin:0 0 1em 0;
+    padding:0 0.5em 0 0;
+    text-align:right;
+    width:250px;
 }
 .fieldValue
 {
-   float: right;
-   width: 150px;
+    float:left;
+    margin:0 0.5em 0.5em 0;
 }
 </style>
 </head>
 <body>
 <h1>Tsiolkovsky Rocket Equation</h1>
-   <canvas id="myCanvas" width="600" height="400" style="border:1px solid #d3d3d3;">
+   <canvas id="myCanvas" width="930" height="400" style="border:1px solid #d3d3d3;">
       Your browser does not support the HTML5 canvas tag.
    </canvas>
 
 <div>
-<fieldset>
-   <legend>Red Rocket</legend>
-   <div class="fieldName">Inital mass m<sub>0</sub> [kg]:<input class="fieldValue" type="number" value="5000" id="m0_1" min="1"></div>
-   <div class="fieldName">Final mass m<sub>1</sub> [kg]:<input class="fieldValue" type="number" value="2000" id="m1_1" min="1"></div>
-   <div class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:<input class="fieldValue" type="number" value="2500" id="ve_1" min="1"></div>
-   <div class="fieldName">Burning time [s]:<input class="fieldValue" type="number" value="120" id="t_1" min="1"></div>
+<fieldset >
+   <legend style="background:red;">Red Rocket</legend>
+   <label class="fieldName">Inital mass m<sub>0</sub> [kg]:</label><input class="fieldValue" type="number" value="5000" id="m0_1" min="1" onchange="drawChart()" />
+   <label class="fieldName">Final mass m<sub>1</sub> [kg]:</label><input class="fieldValue" type="number" value="2000" id="m1_1" min="1" onchange="drawChart()" />
+   <label class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:</label><input class="fieldValue" type="number" value="2500" id="ve_1" min="1" onchange="drawChart()" />
+   <label class="fieldName">Burning time [s]:</label><input class="fieldValue" type="number" value="120" id="t_1" min="1" onchange="drawChart()" />
 </fieldset>
 </div>
 <div>
-<fieldset>
-   <legend>White Rocket</legend>
-   <div class="fieldName">Inital mass m<sub>0</sub> [kg]:<input class="fieldValue" type="number" value="5000" id="m0_2" min="1"></div>
-   <div class="fieldName">Final mass m<sub>1</sub> [kg]:<input class="fieldValue" type="number" value="2000" id="m1_2" min="1"></div>
-   <div class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:<input class="fieldValue" type="number" value="4400" id="ve_2" min="1"></div>
-   <div class="fieldName">Burning time [s]:<input class="fieldValue" type="number" value="120" id="t_2" min="1"></div>
-</fieldset>
+   <fieldset >
+      <legend style="background:green;">Green Rocket</legend>
+      <label class="fieldName">Inital mass m<sub>0</sub> [kg]:</label><input class="fieldValue" type="number" value="5000" id="m0_2" min="1" onchange="drawChart()" />
+      <label class="fieldName">Final mass m<sub>1</sub> [kg]:</label><input class="fieldValue" type="number" value="2000" id="m1_2" min="1" onchange="drawChart()" />
+      <label class="fieldName">Effective exaust velocity v<sub>e</sub> [m/s]:</label><input class="fieldValue" type="number" value="4000" id="ve_2" min="1" onchange="drawChart()" />
+      <label class="fieldName">Burning time [s]:</label><input class="fieldValue" type="number" value="120" id="t_2" min="1" onchange="drawChart()" />
+   </fieldset>
 </div>
-<button onclick="drawChart()">Draw</button>
-
 <script>
 
    function flyRocket(theM0, theM1, theVe, theBurningTime, theStartTime, theChart, theColor)
@@ -99,7 +127,7 @@
       ve = document.getElementById("ve_2").value;
       burningTime = document.getElementById("t_2").value;
 
-      flyRocket(m0, m1, ve, burningTime, currentTime, chart, "white");
+      flyRocket(m0, m1, ve, burningTime, currentTime, chart, "green");
 
       // Draw chart
       chart.backgroundColor = "#7ecefd";
@@ -107,6 +135,8 @@
 
       chart.draw(document.getElementById("myCanvas"));
    }
+
+   drawChart();
 </script>
 </body>
 </html>
