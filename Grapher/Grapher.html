@@ -1,7 +1,38 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
+<style>
+#inputBox
+{
+   display: none;
+   position: absolute; 
+   font-family: sans-serif;
+   border: 2px solid #1F497D;
+   background: #ddd;
+   padding: 15px;
+   box-shadow: 5px 5px 5px grey;
+
+   position: fixed;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+#inputBoxLabel
+{
+    clear:left;
+    display:block;
+    float:left;
+    margin:0 0 1em 0;
+    padding:0 0.5em 0 0;
+}
+#inputBoxValue
+{
+    float:left;
+    margin:0 0.5em 0.5em 0;
+}
+
+</style>
 <script src="ToolBox.js"></script>
 <script src="Graph.js"></script>
 <script type="text/javascript"> 
@@ -18,6 +49,8 @@ window.addEventListener("resize", onResize, false);
 var ctx;
 var debug;
 var dragLastGoodPosition;
+var toolboxEnabled = true;
+var currentNode;
 var graph;
 var state = "Idle";
 var toolBox;
@@ -59,7 +92,31 @@ function getWindowSize(theWindow)
    }
 }
 
+// ---------------------------------------------------------------------------
 
+function getInputBoxValue()
+{
+   return document.getElementById('inputBoxValue').value;
+}
+
+// ---------------------------------------------------------------------------
+
+function hideInputBox()
+{
+   document.getElementById('inputBox').style.display = "none";
+}
+
+// ---------------------------------------------------------------------------
+
+function showInputBox(theMessage, theValue, theCallback, theCancelCallback)
+{
+   toolboxEnabled = false;
+   document.getElementById('inputBoxValue').value = theValue;
+   document.getElementById('inputBox').style.display = "block";
+   document.getElementById('inputBoxLabel').innerHTML = theMessage + ":";
+   document.getElementById('inputBoxSubmitButton').onclick= theCallback;
+   document.getElementById('inputBoxCancelButton').onclick = theCancelCallback;
+}
 
 // ---------------------------------------------------------------------------
 // Main program:
@@ -82,6 +139,60 @@ function initScript()
    toolboxImage = new Image();
    toolboxImage.src = "ToolBox.png";
    toolboxImage.onload = onLoaded;
+}
+
+// ---------------------------------------------------------------------------
+
+function addNodeCallback()
+{
+   toolboxEnabled = true;
+   var nodeText = getInputBoxValue();
+   if (nodeText)
+   {
+      var pos = { x: getWindowSize().width / 2, y: getWindowSize().height / 2 };
+      var newNode = new Node(pos, nodeText);
+      graph.addNode(newNode);
+      graph.selectNode(newNode);
+      dragLastGoodPosition = null;
+      state = "SelectNode";
+   }
+   toolBox.selectedTool = "select";
+   hideInputBox();
+}
+
+// ---------------------------------------------------------------------------
+
+function modifyNodeCallback()
+{
+   toolboxEnabled = true;
+   var nodeText = getInputBoxValue();
+   if (nodeText)
+   {
+      currentNode.setText(nodeText);
+      graph.selectNode(currentNode);
+      dragLastGoodPosition = null;
+      state = "SelectNode";
+   }
+   toolBox.selectedTool = "select";
+   hideInputBox();
+}
+
+// ---------------------------------------------------------------------------
+
+function cancelAddNodeCallback()
+{
+   toolboxEnabled = true;
+   toolBox.selectedTool = "select";
+   hideInputBox();
+}
+
+// ---------------------------------------------------------------------------
+
+function cancelModifyNodeCallback()
+{
+   toolboxEnabled = true;
+   toolBox.selectedTool = "select";
+   hideInputBox();
 }
 
 // ---------------------------------------------------------------------------
@@ -113,33 +224,27 @@ function onMouseClick(theEvent)
 {
    console.log("Click: " + state);
    var mousePos = getMousePos(ctx, theEvent);
-   if (toolBox.onMouseClick(mousePos))
+   if (toolboxEnabled == true)
    {
-      if (toolBox.selectedTool == "add")
+      if (toolBox.onMouseClick(mousePos))
       {
-         var nodeText = prompt('Add Node:\nEnter label:', '');
-         if (nodeText)
+         if (toolBox.selectedTool == "add")
          {
-            var newNode = new Node(mousePos, nodeText);
-            graph.addNode(newNode);
-            graph.selectNode(newNode);
-            dragLastGoodPosition = null;
-            state = "SelectNode";
+            showInputBox("Add node", "", addNodeCallback, cancelAddNodeCallback);
          }
-         toolBox.selectedTool = "select";
+         else
+            if (toolBox.selectedTool == "connect")
+            {
+               graph.selectedNode = null;
+            }
+            else
+               if (toolBox.selectedTool == "delete")
+               {
+                  graph.deleteSelectedNode();
+                  toolBox.selectedTool = "select";
+               }
+         draw(ctx);
       }
-      else
-      if (toolBox.selectedTool == "connect")
-      {
-         graph.selectedNode = null;
-      }
-      else
-      if (toolBox.selectedTool == "delete")
-      {
-         graph.deleteSelectedNode();
-         toolBox.selectedTool = "select";
-      }
-      draw(ctx);
    }
 }
 
@@ -158,16 +263,12 @@ function onMouseDoubleClick(theEvent)
    {
       case "select":
       {
-         var node = graph.getHitNode(mousePos);
-         if (node)
+         currentNode = graph.getHitNode(mousePos);
+         if (currentNode)
          {
             // existing node
             draw(ctx);
-            var newText = prompt('Modify Node:\nEnter label:', node.text);
-            if (newText)
-            {   
-               node.setText(newText);
-            }
+            showInputBox("Modify Node", currentNode.text, modifyNodeCallback, cancelModifyNodeCallback)
          }
          console.log("Double Click OUT: " + state);
          draw(ctx);
@@ -228,9 +329,12 @@ function onMouseDown(theEvent)
 function onMouseMove(theEvent)
 {
    var mousePos = getMousePos(ctx, theEvent);
-   if (toolBox.onMouseMove(mousePos))
+   if (toolboxEnabled == true)
    {
-      draw(ctx);
+      if (toolBox.onMouseMove(mousePos))
+      {
+         draw(ctx);
+      }
    }
    switch (toolBox.selectedTool)
    {
@@ -290,10 +394,13 @@ function onMouseUp(theEvent)
 {
    console.log("Mouse up IN: " + state);
    var mousePos = getMousePos(ctx, theEvent);
-   if (toolBox.getTool(mousePos))
+   if (toolboxEnabled == true)
    {
-      // ignore click on tool box
-      return;
+      if (toolBox.getTool(mousePos))
+      {
+         // ignore click on tool box
+         return;
+      }
    }
    switch (toolBox.selectedTool)
    {
@@ -351,6 +458,11 @@ function onResize(theEvent)
 </script>
 </head>
 <body>
+<div id="inputBox">
+<label id="inputBoxLabel"></label><input id ="inputBoxValue" type="text"/>
+<button id="inputBoxSubmitButton">Ok</button>
+<button id="inputBoxCancelButton">Cancel</button>
+</div>
 <canvas id="canvas" width="640" height="480"></canvas>
 </body>
 </html>
