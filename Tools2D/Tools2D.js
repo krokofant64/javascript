@@ -49,10 +49,10 @@ Tools2D.distancePointToLine = function (thePoint, theLine)
                 (theLine.endPoint.x * theLine.startPoint.y - theLine.endPoint.y * theLine.startPoint.x);
    if (num != 0.0)
    {
-      var lineLength = distancePointToPoint(theLine.startPoint, theLine.endPoint);
+      var lineLength = Tools2D.distancePointToPoint(theLine.startPoint, theLine.endPoint);
       if (lineLength != 0.0)
       {
-         return abs(num) / lineLength;
+         return Math.abs(num) / lineLength;
       }
    }
    return 0.0;
@@ -123,8 +123,8 @@ Tools2D.intersectionLineSegmentLineSegment = function (theLine0, theLine1)
       if (s >= 0.0 && s <= 1.0 && t >= 0.0 && t <= 1.0)
       {
          // Lines intersect
-         return new Point(theLine0.startPoint.x + (t * d0x), 
-                          theLine0.startPoint.y + (t * d0y));
+         return new Tools2D.Point(theLine0.startPoint.x + (t * d0x), 
+                                  theLine0.startPoint.y + (t * d0y));
       }
    }
    return undefined; // No intersection

@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="UTF-8">
+   <script src="Tools2D.js"></script>
+   <title>Tolls2D Test</title>
+</head>
+
+<body>
+<h1>Tools2D Test</h1>
+<canvas id="myCanvas" width="930" height="400" style="border:1px solid #d3d3d3;">
+   Your browser does not support the HTML5 canvas tag.
+</canvas>
+   <script type="text/javascript">
+
+   Tools2D.Point.prototype.draw = function (theCtx, theLabel, theLabelPos)
+   {
+      theCtx.save();
+      theCtx.beginPath();
+      theCtx.moveTo(this.x - 3, this.y - 3);
+      theCtx.lineTo(this.x + 3, this.y + 3);
+      theCtx.moveTo(this.x + 3, this.y - 3);
+      theCtx.lineTo(this.x - 3, this.y + 3);
+      theCtx.stroke();
+      if (theLabel)
+      {
+         switch (theLabelPos)
+         {
+            case "left":
+            {
+               theCtx.textAlign = "right";
+               theCtx.textBaseline = "middle";
+               theCtx.fillText(theLabel, this.x - 5, this.y);
+               break;
+            }
+            case "right":
+            {
+               theCtx.textAlign = "left";
+               theCtx.textBaseline = "middle";
+               theCtx.fillText(theLabel, this.x + 5, this.y);
+               break;
+            }
+            case "top":
+            {
+               theCtx.textAlign = "center";
+               theCtx.textBaseline = "bottom";
+               theCtx.fillText(theLabel, this.x, this.y - 5);
+               break;
+            }
+            case "bottom":
+            default:
+            {
+               theCtx.textAlign = "center";
+               theCtx.textBaseline = "top";
+               theCtx.fillText(theLabel, this.x, this.y + 5);
+               break;
+            }
+         }
+      }
+      theCtx.restore();
+   };
+
+   Tools2D.Line.prototype.draw = function (theCtx)
+   {
+
+      this.startPoint.draw(theCtx);
+      this.endPoint.draw(theCtx);
+      theCtx.beginPath();
+      theCtx.moveTo(this.startPoint.x, this.startPoint.y);
+      theCtx.lineTo(this.endPoint.x, this.endPoint.y);
+      theCtx.stroke();
+   };
+
+   var canvas = document.getElementById("myCanvas");
+   var ctx = canvas.getContext("2d");
+   var p0 = new Tools2D.Point(20, 30);
+   var p1 = new Tools2D.Point(60, 80);
+   p0.draw(ctx, "P0", "left");
+   p1.draw(ctx, "P1", "right");
+   var distP0P1 = Math.round(Tools2D.distancePointToPoint(p0, p1));
+   ctx.fillText("Distance P0 - P1 = " + distP0P1, 100, 30);
+
+   var p2 = new Tools2D.Point(50, 100);
+   var p3 = new Tools2D.Point(100, 300);
+   var l1 = new Tools2D.Line(p2, p3);
+
+
+   l1.draw(ctx);
+
+   var p4 = new Tools2D.Point(10, 200);
+   var p5 = new Tools2D.Point(150, 250);
+   var l2 = new Tools2D.Line(p4, p5);
+
+
+   l2.draw(ctx);
+
+
+   var distP0L1 = Math.round(Tools2D.distancePointToLine(p0, l1));
+   ctx.fillText("Distance P0 - LS1 = " + distP0L1, 100, 50);
+   var distP1L1 = Math.round(Tools2D.distancePointToLine(p1, l1));
+   ctx.fillText("Distance P1 - LS1 = " + distP1L1, 100, 70);
+
+
+   var distP0LS1 = Math.round(Tools2D.distancePointToLineSegment(p0, l1));
+   ctx.fillText("Distance P0 - LS1 = " + distP0LS1, 100, 90);
+   var distP1LS1 = Math.round(Tools2D.distancePointToLineSegment(p1, l1));
+   ctx.fillText("Distance P1 - LS1 = " + distP1LS1, 100, 110);
+
+   var interL1L2 = Tools2D.intersectionLineSegmentLineSegment(l1, l2);
+   if (interL1L2)
+   {
+      interL1L2.draw(ctx, "Intersection L1 - L2", "right");
+   }
+
+   </script>
+
+
+</body>
+</html>
