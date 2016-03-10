@@ -5,7 +5,7 @@
 </head>   
 <body>
 
-<canvas id="myCanvas" width="600" height="400" style="border:1px solid #d3d3d3;">
+<canvas id="myCanvas" width="600" height="400" style="border:1px solid #d3d3d3;box-shadow: 10px 10px 3px #888888;">
    Your browser does not support the HTML5 canvas tag.
 </canvas>
 <script src='LineChart.js'></script>
@@ -16,13 +16,13 @@
       var currentTime = new Date();
       redCurve += Math.random() - 0.5;
       chart.addData("red", redCurve, currentTime); // add data to chart
-
+      
       blueCurve += Math.random() - 0.5;
       chart.addData("blue", blueCurve, currentTime); // add data to chart
 
       greenCurve += Math.random() - 0.5;
       chart.addData("green", greenCurve, currentTime); // add data to chart
-
+      
       // Draw chart
       chart.draw(document.getElementById("myCanvas"));
 
@@ -38,6 +38,12 @@
    chart.backgroundColor = "#7ecefd";
    chart.foregroundColor = "#29475f";
 
+   chart.addLabel("red", "curve 1");
+
+   chart.addLabel("blue", "curve 2");
+   chart.addLabel("green", "curve 3");
+   chart.addLabel("yellow", "curve 4");
+
    var redCurve = (Math.random() * 10) + 1;
    chart.addData("red", redCurve, currentTime); // add data to chart
 
@@ -46,7 +52,7 @@
 
    var greenCurve = (Math.random() * 10) + 1;
    chart.addData("green", greenCurve, currentTime); // add data to chart
-
+   
    // Draw chart
    chart.draw(document.getElementById("myCanvas"));
 

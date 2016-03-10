@@ -306,9 +306,39 @@ LineChart.prototype.draw = function (theCanvas)
    var labelWidthX = ctx.measureText(" 9 999 999 999").width;
    var zeroOffsetX = this.leftMargin + labelWidthX + this.tickLength + 2;
    var xLength = this.width - zeroOffsetX - this.rightMargin;
+
+   // Draw the labels
+   if (this.labels)
+   {
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      var deltaY = ctx.measureText('M').width + 5;
+      var deltaX = xLength / 3;
+      var y = this.topMargin + deltaY;
+      var column = 0;
+      for (var color in this.labels)
+      {
+         ctx.beginPath();
+         var label = this.labels[color];
+         var x = zeroOffsetX + (column % 3) * deltaX;
+         ctx.strokeStyle = color;
+         ctx.fillStyle = this.foregroundColor;
+         ctx.moveTo(x, y);
+         ctx.lineTo(x + 20, y);
+         ctx.stroke();
+         ctx.fillText(label, x + 25, y);
+         column++;
+         if (column % 3 == 0)
+         {
+            y += deltaY;
+         }
+      }
+      ctx.beginPath();
+   }
+
    var labelWidthY = ctx.measureText("9999-99-99 23:59:59.999").width;
    var zeroOffsetY = this.bottomMargin + labelWidthY + this.tickLength + 2;
-   var yLength = this.height - zeroOffsetY - this.topMargin;
+   var yLength = this.height - zeroOffsetY - this.topMargin - ((column + 2) / 3 + 1) * deltaY;
    ctx.translate(zeroOffsetX,
                  this.height - zeroOffsetY);  
 
@@ -407,26 +437,61 @@ LineChart.prototype.draw = function (theCanvas)
 
    // Draw the data series
    ctx.save();
-   var previous  = {};
    if ("data" in this)
    {
       for (var color in this.data)
       {
          ctx.strokeStyle = color;
-         ctx.beginPath();
-         for (var time in this.data[color])
+         var hex = ctx.strokeStyle.replace('#', '');
+         var r = parseInt(hex.substring(0, 2), 16);
+         var g = parseInt(hex.substring(2, 4), 16);
+         var b = parseInt(hex.substring(4, 6), 16);
+
+         ctx.fillStyle = "rgba(" + r + "," + g + "," + b + "," + 0.2 + ")";
          {
-            var value = this.data[color][time].value;
-            var x = (time - this.startTime) / timeRange * xLength;
-            var y = (value - this.startValue) / range * yLength;
-            if (color in previous)
+            ctx.beginPath();
+            var firstPoint = true;
+            for (var time in this.data[color])
             {
-               ctx.moveTo(previous[color].x, -previous[color].y);
-               ctx.lineTo(x, -y);
+               var value = this.data[color][time].value;
+               var x = (time - this.startTime) / timeRange * xLength;
+               var y = (value - this.startValue) / range * yLength;
+               if (firstPoint == true)
+               {
+                  firstPoint = false;
+                  ctx.moveTo(x, -y);
+               }
+               else
+               {
+                  ctx.lineTo(x, -y);
+               }
             }
-            previous[color] = {x : x, y : y };
+            ctx.stroke();
+
+            ctx.beginPath();
+            var firstPoint = true;
+            var x0;
+            for (var time in this.data[color])
+            {
+               var value = this.data[color][time].value;
+               var x = (time - this.startTime) / timeRange * xLength;
+               var y = (value - this.startValue) / range * yLength;
+               if (firstPoint == true)
+               {
+                  firstPoint = false;
+                  x0 = x;
+                  ctx.moveTo(x, -y);
+               }
+               else
+               {
+                  ctx.lineTo(x, -y);
+               }
+            }
+            ctx.lineTo(x, 0);
+            ctx.lineTo(x0, 0);
+            ctx.closePath();
+            ctx.fill();
          }
-         ctx.stroke();
       }
    }
    ctx.restore();
@@ -442,7 +507,7 @@ LineChart.prototype.addData = function (theColor, theValue, theTime)
    }
    else
    {
-      time = theTime - (new Date()).getTimezoneOffset() * 60 * 1000; 
+      time = theTime - (new Date()).getTimezoneOffset() * 60 * 1000;
    }
    if (!this.data)
    {
@@ -456,26 +521,35 @@ LineChart.prototype.addData = function (theColor, theValue, theTime)
    {
       this.data[theColor] = {};
    }
-   this.data[theColor][time] = {color: theColor, value: theValue};
+   this.data[theColor][time] = { color: theColor, value: theValue };
    if (time < this.startTime)
    {
       this.startTime = time;
    }
    else
-   if (time > this.endTime)
-   {
-      this.endTime = time;
-   }
+      if (time > this.endTime)
+      {
+         this.endTime = time;
+      }
    if (theValue < this.startValue)
    {
       this.startValue = theValue;
    }
    else
-   if (theValue > this.endValue)
+      if (theValue > this.endValue)
+      {
+         this.endValue = theValue;
+      }
+};
+
+LineChart.prototype.addLabel = function (theColor, theLabel)
+{
+   if (!this.labels)
    {
-      this.endValue = theValue;
+      this.labels = {};
    }
-}
+   this.labels[theColor] = theLabel;
+};
 
 LineChart.prototype.reset = function ()
 {

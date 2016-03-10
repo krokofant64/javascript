@@ -48,7 +48,7 @@ fieldset legend {
 </head>
 <body>
 <h1>Tsiolkovsky Rocket Equation</h1>
-   <canvas id="myCanvas" width="930" height="400" style="border:1px solid #d3d3d3;">
+   <canvas id="myCanvas" width="930" height="400" style="border:1px solid #d3d3d3">
       Your browser does not support the HTML5 canvas tag.
    </canvas>
 
@@ -132,6 +132,9 @@ fieldset legend {
       // Draw chart
       chart.backgroundColor = "#7ecefd";
       chart.foregroundColor = "#29475f";
+
+      chart.addLabel("red", "Red rocket");
+      chart.addLabel("green", "Green rocket");
 
       chart.draw(document.getElementById("myCanvas"));
    }
