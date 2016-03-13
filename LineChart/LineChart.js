@@ -9,22 +9,25 @@ function LineChart()
    this.tickDistanceX = 20;
    this.backgroundColor = "DodgerBlue";
    this.foregroundColor = "White";
-   
+   this.maxTimeSpan = undefined;
+
    this.startTime = 0;
    this.endTime = 0;
    this.startValue = 0;
    this.endValue = 0;
 };
 
-LineChart.prototype.numberTicInfo = function (theRange, theAxisLength, theTickDistanceInPixel)
+LineChart.prototype.numberTicInfo = function (theStartValue, theEndValue, theAxisLength, theTickDistanceInPixel)
 {
    var result =       
    {
       numberOfDecimals: 0,
       tickDistance:     0,
-      numberOfTicks:    0
+      numberOfTicks: 0,
+      startValue: theStartValue
    };
-   var distance = theRange / (theAxisLength / theTickDistanceInPixel);
+   var range = theEndValue - theStartValue;
+   var distance = range / Math.floor(theAxisLength / theTickDistanceInPixel);
    var numberOfDigits = Math.floor(Math.log(distance)/Math.LN10);
    var divisor = Math.pow(10, numberOfDigits);
    var normalizedDistance = distance / divisor;
@@ -47,9 +50,11 @@ LineChart.prototype.numberTicInfo = function (theRange, theAxisLength, theTickDi
       result.tickDistance = 10 * divisor;
    }
 
+   result.startValue = Math.floor(theStartValue / result.tickDistance) * result.tickDistance;
    result.numberOfDecimals = (numberOfDigits < 0) ? Math.abs(numberOfDigits) : 0;
 
-   result.numberOfTicks = Math.ceil(theRange / result.tickDistance);
+   result.numberOfTicks = Math.ceil((theEndValue - result.startValue) / result.tickDistance);
+   result.range = result.numberOfTicks * result.tickDistance;
    return result;
 };
 
@@ -88,8 +93,8 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
              currentTime.getUTCDate() != previousTime.getUTCDate())
          {
            result += currentTime.getUTCFullYear() + "-" +
-                     currentTime.getUTCMonth() + 1 + "-" +
-                     currentTime.getUTCDate() + " ";
+                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getUTCDate()) + " ";
            result += this.to2digit(currentTime.getUTCHours()) + ":" + 
                      this.to2digit(currentTime.getUTCMinutes()) + ":";
          }
@@ -216,15 +221,17 @@ LineChart.prototype.TimeTickTableC = [
    { tickDistance:  7 * 24 * 60 * 60 * 1000, unit: "d"   }
 ];
 
-LineChart.prototype.timeTickInfo = function (theRange, theAxisLength, theTickDistanceInPixel)
+LineChart.prototype.timeTickInfo = function (theStartTime, theEndTime, theAxisLength, theTickDistanceInPixel)
 {
    var result =       
    {
       unit:          "ms",
       tickDistance:  0,
-      numberOfTicks: 0
+      numberOfTicks: 0,
+      startTime: theStartTime
    };
-   var distance = theRange / (theAxisLength / theTickDistanceInPixel);
+   var range = theEndTime - theStartTime;
+   var distance = range / Math.floor(theAxisLength / theTickDistanceInPixel);
    
    for (var i = 0; i < this.TimeTickTableC.length - 1; i++)
    {
@@ -232,14 +239,23 @@ LineChart.prototype.timeTickInfo = function (theRange, theAxisLength, theTickDis
       {
          result.tickDistance = this.TimeTickTableC[i].tickDistance;
          result.unit = this.TimeTickTableC[i].unit;
-         result.numberOfTicks = Math.ceil(theRange / result.tickDistance);
+         result.numberOfTicks = Math.ceil(range / result.tickDistance);
+         result.startTime = Math.floor(theStartTime / result.tickDistance) * result.tickDistance;
+
+         result.numberOfTicks = Math.ceil((theEndTime - result.startTime) / result.tickDistance);
+         result.range = result.numberOfTicks * result.tickDistance;
+
          return result;
       }
    }
    i = this.TimeTickTableC.length - 1;
    result.tickDistance = this.TimeTickTableC[i].tickDistance;
    result.unit = this.TimeTickTableC[i].unit;
-   result.numberOfTicks = Math.ceil(theRange / result.tickDistance);
+   result.numberOfTicks = Math.ceil(range / result.tickDistance);
+   result.startTime = Math.floor(theStartTime / result.tickDistance) * result.tickDistance;
+
+   result.numberOfTicks = Math.ceil((theEndTime - result.startTime) / result.tickDistance);
+   result.range = result.numberOfTicks * result.tickDistance;
    return result;
 };
 
@@ -255,35 +271,25 @@ LineChart.prototype.findLimits = function ()
    }
    for (var color in this.data)
    {
-      for (var time in this.data[color])
+      var length = this.data[color].length;
+      if (length > 0 && this.startTime == undefined)
       {
-         if (this.startTime == undefined)
+         this.startTime = this.data[color][0].time;
+         this.endTime = this.data[color][length - 1].time;
+         this.startValue = this.data[color][0].value; // Initial value only
+         this.endValue = this.startValue;             // Initial value only
+      }
+      for (var i = 0; i < this.data[color].length; i++)
+      {
+         var value = this.data[color][i].value;
+         if (value < this.startValue)
          {
-            this.startTime = time;
-            this.endTime = time;
-            this.startValue = this.data[color][time].value;
-            this.endValue = this.data[color][time].value;
+            this.startValue = value;
          }
          else
+         if (value > this.endValue)
          {
-            if (time < this.startTime)
-            {
-               this.startTime = time;
-            }
-            else
-            if (time > this.endTime)
-            {
-               this.endTime = time;
-            }
-            if (this.data[color][time].value < this.startValue)
-            {
-               this.startValue = this.data[color][time].value;
-            }
-            else
-            if (this.data[color][time].value > this.endValue)
-            {
-               this.endValue = this.data[color][time].value;
-            }
+            this.endValue = value;
          }
       }
    }
@@ -342,17 +348,18 @@ LineChart.prototype.draw = function (theCanvas)
    ctx.translate(zeroOffsetX,
                  this.height - zeroOffsetY);  
 
-   var range = this.endValue - this.startValue;
-   var yAxisInfo = this.numberTicInfo(range, yLength, this.tickDistanceY);
-   this.startValue = Math.floor(this.startValue/yAxisInfo.tickDistance) * yAxisInfo.tickDistance;
-   range = this.endValue - this.startValue;
-   yAxisInfo = this.numberTicInfo(range, yLength, this.tickDistanceY);
-   
-   var timeRange = this.endTime - this.startTime;
-   var xAxisInfo = this.timeTickInfo(timeRange, xLength, this.tickDistanceX);
-   this.startTime = Math.floor(this.startTime/xAxisInfo.tickDistance) * xAxisInfo.tickDistance;
-   timeRange = this.endTime - this.startTime
-   xAxisInfo = this.timeTickInfo(timeRange, xLength, this.tickDistanceX);
+   var yAxisInfo = this.numberTicInfo(this.startValue, this.endValue, yLength, this.tickDistanceY);
+
+   if (this.maxTimeSpan)
+   {
+      this.startTime = (new Date()).getTime() - this.maxTimeSpan;
+      var xAxisInfo = this.timeTickInfo(this.startTime, this.endTime, xLength, this.tickDistanceX);
+      this.removeOldEntries(xAxisInfo.startTime);
+   }
+   else
+   {
+      var xAxisInfo = this.timeTickInfo(this.startTime, this.endTime, xLength, this.tickDistanceX);
+   }
 
    ctx.strokeStyle = this.foregroundColor;
    ctx.fillStyle = this.foregroundColor;
@@ -390,7 +397,7 @@ LineChart.prototype.draw = function (theCanvas)
       var y = Math.floor(i * yLength / (yAxisInfo.numberOfTicks));
       ctx.moveTo(0.5, -y + 0.5);
       ctx.lineTo(0.5 - this.tickLength, -y + 0.5);
-      var label = this.valueToString(yAxisInfo.tickDistance * i + this.startValue, yAxisInfo.numberOfDecimals);
+      var label = this.valueToString(yAxisInfo.tickDistance * i + yAxisInfo.startValue, yAxisInfo.numberOfDecimals);
       ctx.fillText(label, 0.5 - this.tickLength - 2, -y - 0.5);
    }
    ctx.stroke();
@@ -402,7 +409,7 @@ LineChart.prototype.draw = function (theCanvas)
    ctx.beginPath();
    for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
    {
-      var currentTime = xAxisInfo.tickDistance * i + this.startTime
+      var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
       var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
       ctx.moveTo(x + 0.5, 0.5);
       ctx.lineTo(x + 0.5, 0.5 + -yLength);
@@ -419,7 +426,7 @@ LineChart.prototype.draw = function (theCanvas)
    var previousTime = 0;
    for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
    {
-      var currentTime = xAxisInfo.tickDistance * i + this.startTime
+      var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
       var label = this.timeToString(currentTime, previousTime, xAxisInfo.unit);
       var x = Math.floor(i * xLength/(xAxisInfo.numberOfTicks));
       previousTime = currentTime;
@@ -451,11 +458,12 @@ LineChart.prototype.draw = function (theCanvas)
          {
             ctx.beginPath();
             var firstPoint = true;
-            for (var time in this.data[color])
+            for (var i = 0; i < this.data[color].length; i++)
             {
-               var value = this.data[color][time].value;
-               var x = (time - this.startTime) / timeRange * xLength;
-               var y = (value - this.startValue) / range * yLength;
+               var time = this.data[color][i].time;
+               var value = this.data[color][i].value;
+               var x = (time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+               var y = (value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
                if (firstPoint == true)
                {
                   firstPoint = false;
@@ -471,11 +479,12 @@ LineChart.prototype.draw = function (theCanvas)
             ctx.beginPath();
             var firstPoint = true;
             var x0;
-            for (var time in this.data[color])
+            for (var i = 0; i < this.data[color].length; i++)
             {
-               var value = this.data[color][time].value;
-               var x = (time - this.startTime) / timeRange * xLength;
-               var y = (value - this.startValue) / range * yLength;
+               var time = this.data[color][i].time;
+               var value = this.data[color][i].value;
+               var x = (time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+               var y = (value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
                if (firstPoint == true)
                {
                   firstPoint = false;
@@ -500,36 +509,36 @@ LineChart.prototype.draw = function (theCanvas)
 
 LineChart.prototype.addData = function (theColor, theValue, theTime)
 {
-   var time;
+   var currentTime;
    if (theTime instanceof Date)
    {
-      time = theTime.getTime();
+      currentTime = theTime.getTime();
    }
    else
    {
-      time = theTime - (new Date()).getTimezoneOffset() * 60 * 1000;
+      currentTime = theTime - (new Date()).getTimezoneOffset() * 60 * 1000;
    }
    if (!this.data)
    {
       this.data = {};
-      this.startTime = time;
-      this.endTime = time;
+      this.startTime = currentTime;
+      this.endTime = currentTime;
       this.startValue = theValue;
       this.endValue = theValue;
    }
    if (!this.data[theColor])
    {
-      this.data[theColor] = {};
+      this.data[theColor] = [];
    }
-   this.data[theColor][time] = { color: theColor, value: theValue };
-   if (time < this.startTime)
+   this.data[theColor].push({ time: currentTime, value: theValue });
+   if (currentTime < this.startTime)
    {
-      this.startTime = time;
+      this.startTime = currentTime;
    }
    else
-      if (time > this.endTime)
+      if (currentTime > this.endTime)
       {
-         this.endTime = time;
+         this.endTime = currentTime;
       }
    if (theValue < this.startValue)
    {
@@ -562,11 +571,12 @@ LineChart.prototype.removeOldEntries = function (theTime)
    {
       for (var color in this.data)
       {
-         for (var time in this.data[color])
+         for (var i = 0; i < this.data[color].length; i++)
          {
-            if (time < theTime)
+            if (this.data[color][i].time >= theTime)
             {
-               delete this.data[color][time];
+               this.data[color] = this.data[color].slice(i);
+               break;
             }
          }
       }
