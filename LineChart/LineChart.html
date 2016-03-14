@@ -13,20 +13,17 @@
 
    function updateChart()
    {
-      var currentTime = new Date();
-      redCurve += Math.random() - 0.5;
-      chart.addData("red", redCurve, currentTime); // add data to chart
+      redValue += Math.random() - 0.5;
+      chart.addData("red", redValue); // add data to chart
       
-      blueCurve += Math.random() - 0.5;
-      chart.addData("blue", blueCurve, currentTime); // add data to chart
+      blueValue += Math.random() - 0.5;
+      chart.addData("blue", blueValue); // add data to chart
 
-      greenCurve += Math.random() - 0.5;
-      chart.addData("green", greenCurve, currentTime); // add data to chart
+      greenValue += Math.random() - 0.5;
+      chart.addData("green", greenValue); // add data to chart
       
       // Draw chart
       chart.draw(document.getElementById("myCanvas"));
-
-//      chart.removeOldEntries(currentTime.getTime() - 10000); // Limit graph to last 10 seconds
 
       setTimeout(updateChart, 1000);
    }
@@ -37,20 +34,21 @@
    var chart = new LineChart();
    chart.backgroundColor = "#7ecefd";
    chart.foregroundColor = "#29475f";
-   chart.maxTimeSpan = 60000; // 60 seconds
+   chart.history = 60000; // 60 seconds history
 
    chart.addLabel("red", "Uplink speed [Mbit/s]");
    chart.addLabel("blue", "Downlink speed [Mbit/s]");
    chart.addLabel("green", "Num. connections");
 
-   var redCurve = (Math.random() * 10) + 1;
-   chart.addData("red", redCurve, currentTime); // add data to chart
+   // Add data to the chart
+   var redValue = (Math.random() * 10) + 1;
+   chart.addData("red", redValue); // add data to chart
 
-   var blueCurve = (Math.random() * 10) + 1;
-   chart.addData("blue", blueCurve, currentTime); // add data to chart
+   var blueValue = (Math.random() * 10) + 1;
+   chart.addData("blue", blueValue); // add data to chart
 
-   var greenCurve = (Math.random() * 10) + 1;
-   chart.addData("green", greenCurve, currentTime); // add data to chart
+   var greenValue = (Math.random() * 10) + 1;
+   chart.addData("green", greenValue); // add data to chart
    
    // Draw chart
    chart.draw(document.getElementById("myCanvas"));

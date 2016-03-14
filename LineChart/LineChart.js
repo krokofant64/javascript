@@ -9,7 +9,7 @@ function LineChart()
    this.tickDistanceX = 20;
    this.backgroundColor = "DodgerBlue";
    this.foregroundColor = "White";
-   this.maxTimeSpan = undefined;
+   this.history = undefined;
 
    this.startTime = 0;
    this.endTime = 0;
@@ -88,74 +88,74 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
    {
       case "ms":
       {
-         if (currentTime.getUTCFullYear() != previousTime.getUTCFullYear() ||
-             currentTime.getUTCMonth() != previousTime.getUTCMonth() ||
-             currentTime.getUTCDate() != previousTime.getUTCDate())
+         if (currentTime.getFullYear() != previousTime.getFullYear() ||
+             currentTime.getMonth() != previousTime.getMonth() ||
+             currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getUTCFullYear() + "-" +
-                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getUTCDate()) + " ";
-           result += this.to2digit(currentTime.getUTCHours()) + ":" + 
-                     this.to2digit(currentTime.getUTCMinutes()) + ":";
+           result += currentTime.getFullYear() + "-" +
+                     this.to2digit(currentTime.getMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getDate()) + " ";
+           result += this.to2digit(currentTime.getHours()) + ":" + 
+                     this.to2digit(currentTime.getMinutes()) + ":";
          }
          else
-         if (currentTime.getUTCHours() != previousTime.getUTCHours() ||
-             currentTime.getUTCMinutes() != previousTime.getUTCMinutes())
+         if (currentTime.getHours() != previousTime.getHours() ||
+             currentTime.getMinutes() != previousTime.getMinutes())
          {
-           result += this.to2digit(currentTime.getUTCHours()) + ":" + 
-                     this.to2digit(currentTime.getUTCMinutes()) + ":";
+           result += this.to2digit(currentTime.getHours()) + ":" + 
+                     this.to2digit(currentTime.getMinutes()) + ":";
          }
-         result += this.to2digit(currentTime.getUTCSeconds()) + "." +  
-                   this.to3digit(currentTime.getUTCMilliseconds());
+         result += this.to2digit(currentTime.getSeconds()) + "." +  
+                   this.to3digit(currentTime.getMilliseconds());
          return result;
       }
       case "s":
       {
-         if (currentTime.getUTCFullYear() != previousTime.getUTCFullYear() ||
-             currentTime.getUTCMonth() != previousTime.getUTCMonth() ||
-             currentTime.getUTCDate() != previousTime.getUTCDate())
+         if (currentTime.getFullYear() != previousTime.getFullYear() ||
+             currentTime.getMonth() != previousTime.getMonth() ||
+             currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getUTCFullYear() + "-" +
-                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getUTCDate()) + " ";
+           result += currentTime.getFullYear() + "-" +
+                     this.to2digit(currentTime.getMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getDate()) + " ";
          }
-         result += this.to2digit(currentTime.getUTCHours()) + ":" + 
-                  this.to2digit(currentTime.getUTCMinutes()) + ":" +
-                  this.to2digit(currentTime.getUTCSeconds());
+         result += this.to2digit(currentTime.getHours()) + ":" + 
+                  this.to2digit(currentTime.getMinutes()) + ":" +
+                  this.to2digit(currentTime.getSeconds());
          return result;
       }
       case "min":
       {
-         if (currentTime.getUTCFullYear() != previousTime.getUTCFullYear() ||
-             currentTime.getUTCMonth() != previousTime.getUTCMonth() ||
-             currentTime.getUTCDate() != previousTime.getUTCDate())
+         if (currentTime.getFullYear() != previousTime.getFullYear() ||
+             currentTime.getMonth() != previousTime.getMonth() ||
+             currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getUTCFullYear() + "-" +
-                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getUTCDate()) + " ";
+           result += currentTime.getFullYear() + "-" +
+                     this.to2digit(currentTime.getMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getDate()) + " ";
          }
-         result += this.to2digit(currentTime.getUTCHours()) + ":" +
-                   this.to2digit(currentTime.getUTCMinutes());
+         result += this.to2digit(currentTime.getHours()) + ":" +
+                   this.to2digit(currentTime.getMinutes());
          return result;
       }
       case "h":
       {
-         if (currentTime.getUTCFullYear() != previousTime.getUTCFullYear() ||
-             currentTime.getUTCMonth() != previousTime.getUTCMonth() ||
-             currentTime.getUTCDate() != previousTime.getUTCDate())
+         if (currentTime.getFullYear() != previousTime.getFullYear() ||
+             currentTime.getMonth() != previousTime.getMonth() ||
+             currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getUTCFullYear() + "-" +
-                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getUTCDate()) + " ";
+           result += currentTime.getFullYear() + "-" +
+                     this.to2digit(currentTime.getMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getDate()) + " ";
          }
-         return result + this.to2digit(currentTime.getUTCHours()) + ":" +
-                         this.to2digit(currentTime.getUTCMinutes());
+         return result + this.to2digit(currentTime.getHours()) + ":" +
+                         this.to2digit(currentTime.getMinutes());
       }
       case "d":
       {
-         return "" + currentTime.getUTCFullYear() + "-" +
-                     this.to2digit(currentTime.getUTCMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getUTCDate());
+         return "" + currentTime.getFullYear() + "-" +
+                     this.to2digit(currentTime.getMonth() + 1) + "-" +
+                     this.to2digit(currentTime.getDate());
       }
 
    }
@@ -350,9 +350,9 @@ LineChart.prototype.draw = function (theCanvas)
 
    var yAxisInfo = this.numberTicInfo(this.startValue, this.endValue, yLength, this.tickDistanceY);
 
-   if (this.maxTimeSpan)
+   if (this.history)
    {
-      this.startTime = (new Date()).getTime() - this.maxTimeSpan;
+      this.startTime = Math.max(this.startTime, (new Date()).getTime() - this.history);
       var xAxisInfo = this.timeTickInfo(this.startTime, this.endTime, xLength, this.tickDistanceX);
       this.removeOldEntries(xAxisInfo.startTime);
    }
@@ -510,13 +510,18 @@ LineChart.prototype.draw = function (theCanvas)
 LineChart.prototype.addData = function (theColor, theValue, theTime)
 {
    var currentTime;
+   if (theTime == undefined)
+   {
+      currentTime = (new Date()).getTime();
+   }
+   else
    if (theTime instanceof Date)
    {
       currentTime = theTime.getTime();
    }
    else
    {
-      currentTime = theTime - (new Date()).getTimezoneOffset() * 60 * 1000;
+      currentTime = theTime;
    }
    if (!this.data)
    {
@@ -575,7 +580,22 @@ LineChart.prototype.removeOldEntries = function (theTime)
          {
             if (this.data[color][i].time >= theTime)
             {
-               this.data[color] = this.data[color].slice(i);
+               if (i > 0)
+               {
+                  var time1 = this.data[color][i].time;
+                  var time0 = this.data[color][i - 1].time;
+                  var value1 = this.data[color][i].value;
+                  var value0 = this.data[color][i - 1].value;
+                  var m = (value1 - value0) / (time1 - time0);
+                  var value = value0 + m * (theTime - time0);
+                  this.data[color][i - 1].time = theTime;
+                  this.data[color][i - 1].value =  value;
+                  this.data[color] = this.data[color].slice(i - 1);
+               }
+               else
+               {
+                  this.data[color] = this.data[color].slice(i);
+               }
                break;
             }
          }
