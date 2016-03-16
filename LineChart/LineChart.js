@@ -404,43 +404,46 @@ LineChart.prototype.draw = function (theCanvas)
    ctx.restore();
 
    // Draw X-grid lines
-   ctx.save();
-   ctx.lineWidth = 1;
-   ctx.beginPath();
-   for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
+   if (xAxisInfo.numberOfTicks > 0)
    {
-      var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
-      var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
-      ctx.moveTo(x + 0.5, 0.5);
-      ctx.lineTo(x + 0.5, 0.5 + -yLength);
-   }
-   ctx.stroke();
-   ctx.restore();
-
-   // Draw X-axis ticks and labels
-   ctx.save();
-   ctx.textAlign = "end";
-   ctx.textBaseline = "middle";
-   ctx.lineWidth = 2;
-   ctx.beginPath();
-   var previousTime = 0;
-   for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
-   {
-      var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
-      var label = this.timeToString(currentTime, previousTime, xAxisInfo.unit);
-      var x = Math.floor(i * xLength/(xAxisInfo.numberOfTicks));
-      previousTime = currentTime;
-      ctx.moveTo( x + 0.5, 0.5);
-      ctx.lineTo( x + 0.5, 0.5 + this.tickLength);
       ctx.save();
-      ctx.translate(x + 0.5 ,
-                       0.5 + this.tickLength + 2);  
-      ctx.rotate(-90*Math.PI/180);
-      ctx.fillText(label, 0 , 0);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
+      {
+         var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
+         var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
+         ctx.moveTo(x + 0.5, 0.5);
+         ctx.lineTo(x + 0.5, 0.5 + -yLength);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Draw X-axis ticks and labels
+      ctx.save();
+      ctx.textAlign = "end";
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      var previousTime = 0;
+      for (var i = 0; i <= xAxisInfo.numberOfTicks; i++)
+      {
+         var currentTime = xAxisInfo.tickDistance * i + xAxisInfo.startTime
+         var label = this.timeToString(currentTime, previousTime, xAxisInfo.unit);
+         var x = Math.floor(i * xLength / (xAxisInfo.numberOfTicks));
+         previousTime = currentTime;
+         ctx.moveTo(x + 0.5, 0.5);
+         ctx.lineTo(x + 0.5, 0.5 + this.tickLength);
+         ctx.save();
+         ctx.translate(x + 0.5,
+                          0.5 + this.tickLength + 2);
+         ctx.rotate(-90 * Math.PI / 180);
+         ctx.fillText(label, 0, 0);
+         ctx.restore();
+      }
+      ctx.stroke();
       ctx.restore();
    }
-   ctx.stroke();
-   ctx.restore();
 
    // Draw the data series
    ctx.save();
