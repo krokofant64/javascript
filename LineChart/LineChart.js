@@ -1,5 +1,6 @@
 function LineChart()
 {
+   // Public properties
    this.tickLength = 5;
    this.leftMargin = 10;
    this.rightMargin = 10;
@@ -10,7 +11,12 @@ function LineChart()
    this.backgroundColor = "DodgerBlue";
    this.foregroundColor = "White";
    this.history = undefined;
-
+   this.fillArea = true;
+   this.showDate = true;
+   this.drawDataPoints = false;
+   this.pointSize = 3;
+   
+   // Private properties
    this.startTime = 0;
    this.endTime = 0;
    this.startValue = 0;
@@ -26,6 +32,11 @@ LineChart.prototype.numberTicInfo = function (theStartValue, theEndValue, theAxi
       numberOfTicks: 0,
       startValue: theStartValue
    };
+   if (theEndValue == theStartValue)
+   {
+      theEndValue += 1;
+      theStartValue -= 1;
+   }
    var range = theEndValue - theStartValue;
    var distance = range / Math.floor(theAxisLength / theTickDistanceInPixel);
    var numberOfDigits = Math.floor(Math.log(distance)/Math.LN10);
@@ -92,21 +103,24 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
              currentTime.getMonth() != previousTime.getMonth() ||
              currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getFullYear() + "-" +
-                     this.to2digit(currentTime.getMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getDate()) + " ";
-           result += this.to2digit(currentTime.getHours()) + ":" + 
-                     this.to2digit(currentTime.getMinutes()) + ":";
+            if (this.showDate)
+            {
+               result += currentTime.getFullYear() + "-" +
+                         this.to2digit(currentTime.getMonth() + 1) + "-" +
+                         this.to2digit(currentTime.getDate()) + " ";
+            }
+            result += this.to2digit(currentTime.getHours()) + ":" + 
+                      this.to2digit(currentTime.getMinutes()) + ":";
          }
          else
          if (currentTime.getHours() != previousTime.getHours() ||
              currentTime.getMinutes() != previousTime.getMinutes())
          {
-           result += this.to2digit(currentTime.getHours()) + ":" + 
-                     this.to2digit(currentTime.getMinutes()) + ":";
+            result += this.to2digit(currentTime.getHours()) + ":" + 
+                      this.to2digit(currentTime.getMinutes()) + ":";
          }
-         result += this.to2digit(currentTime.getSeconds()) + "." +  
-                   this.to3digit(currentTime.getMilliseconds());
+         result += this.to2digit(currentTime.getSeconds()) + ".";
+         result += this.to3digit(currentTime.getMilliseconds());
          return result;
       }
       case "s":
@@ -115,9 +129,12 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
              currentTime.getMonth() != previousTime.getMonth() ||
              currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getFullYear() + "-" +
-                     this.to2digit(currentTime.getMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getDate()) + " ";
+            if (this.showDate)
+            {
+               result += currentTime.getFullYear() + "-" +
+                         this.to2digit(currentTime.getMonth() + 1) + "-" +
+                         this.to2digit(currentTime.getDate()) + " ";
+            }
          }
          result += this.to2digit(currentTime.getHours()) + ":" + 
                   this.to2digit(currentTime.getMinutes()) + ":" +
@@ -130,9 +147,12 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
              currentTime.getMonth() != previousTime.getMonth() ||
              currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getFullYear() + "-" +
-                     this.to2digit(currentTime.getMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getDate()) + " ";
+            if (this.showDate)
+            {
+               result += currentTime.getFullYear() + "-" +
+                         this.to2digit(currentTime.getMonth() + 1) + "-" +
+                         this.to2digit(currentTime.getDate()) + " ";
+            }
          }
          result += this.to2digit(currentTime.getHours()) + ":" +
                    this.to2digit(currentTime.getMinutes());
@@ -144,18 +164,29 @@ LineChart.prototype.timeToString = function (theTimeInMs, thePreviousTimeInMs, t
              currentTime.getMonth() != previousTime.getMonth() ||
              currentTime.getDate() != previousTime.getDate())
          {
-           result += currentTime.getFullYear() + "-" +
-                     this.to2digit(currentTime.getMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getDate()) + " ";
+            if (this.showDate)
+            {
+               result += currentTime.getFullYear() + "-" +
+                         this.to2digit(currentTime.getMonth() + 1) + "-" +
+                         this.to2digit(currentTime.getDate()) + " ";
+            }
          }
          return result + this.to2digit(currentTime.getHours()) + ":" +
                          this.to2digit(currentTime.getMinutes());
       }
       case "d":
       {
-         return "" + currentTime.getFullYear() + "-" +
-                     this.to2digit(currentTime.getMonth() + 1) + "-" +
-                     this.to2digit(currentTime.getDate());
+         if (this.showDate)
+         {
+            return result + currentTime.getFullYear() + "-" +
+                            this.to2digit(currentTime.getMonth() + 1) + "-" +
+                            this.to2digit(currentTime.getDate()) + " ";
+         }
+         else
+         {
+            return result + this.to2digit(currentTime.getHours()) + ":" +
+                            this.to2digit(currentTime.getMinutes());
+         }
       }
 
    }
@@ -230,6 +261,11 @@ LineChart.prototype.timeTickInfo = function (theStartTime, theEndTime, theAxisLe
       numberOfTicks: 0,
       startTime: theStartTime
    };
+   if (theEndTime == theStartTime)
+   {
+      theEndTime += 1;
+      theStartTime -= 1;
+   }
    var range = theEndTime - theStartTime;
    var distance = range / Math.floor(theAxisLength / theTickDistanceInPixel);
    
@@ -301,14 +337,17 @@ LineChart.prototype.draw = function (theCanvas)
    {
       return;
    }
+      
    var ctx = theCanvas.getContext("2d");
    ctx.save();
    this.width = theCanvas.width;
    this.height = theCanvas.height;
 
+   ctx.beginPath();
    ctx.fillStyle = this.backgroundColor;
    ctx.rect(0, 0, this.width, this.height);
    ctx.fill();
+   ctx.beginPath();
    var labelWidthX = ctx.measureText(" 9 999 999 999").width;
    var zeroOffsetX = this.leftMargin + labelWidthX + this.tickLength + 2;
    var xLength = this.width - zeroOffsetX - this.rightMargin;
@@ -342,7 +381,15 @@ LineChart.prototype.draw = function (theCanvas)
       ctx.beginPath();
    }
 
-   var labelWidthY = ctx.measureText("9999-99-99 23:59:59.999").width;
+   var labelWidthY;
+   if (this.showDate)
+   {
+      labelWidthY = ctx.measureText("9999-99-99 23:59:59.999").width;
+   }
+   else
+   {
+      labelWidthY = ctx.measureText("23:59:59.999").width;
+   }
    var zeroOffsetY = this.bottomMargin + labelWidthY + this.tickLength + 2;
    var yLength = this.height - zeroOffsetY - this.topMargin - ((column + 2) / 3 + 1) * deltaY;
    ctx.translate(zeroOffsetX,
@@ -458,15 +505,18 @@ LineChart.prototype.draw = function (theCanvas)
          var b = parseInt(hex.substring(4, 6), 16);
 
          ctx.fillStyle = "rgba(" + r + "," + g + "," + b + "," + 0.2 + ")";
+         var series = this.data[color];
+         
+         if (series.length > 1)
          {
+            // multiple data points
+            // Draw curve
             ctx.beginPath();
             var firstPoint = true;
-            for (var i = 0; i < this.data[color].length; i++)
+            for (var i = 0; i < series.length; i++)
             {
-               var time = this.data[color][i].time;
-               var value = this.data[color][i].value;
-               var x = (time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
-               var y = (value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
+               var x = (series[i].time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+               var y = (series[i].value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
                if (firstPoint == true)
                {
                   firstPoint = false;
@@ -475,35 +525,55 @@ LineChart.prototype.draw = function (theCanvas)
                else
                {
                   ctx.lineTo(x, -y);
+               }
+               if (this.drawDataPoints)
+               {
+//                  ctx.beginPath();
+                  var x = (series[i].time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+                  var y = (series[i].value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
+                  ctx.arc(x, -y, this.pointSize, 0, 2 * Math.PI);
+//                  ctx.stroke();
                }
             }
             ctx.stroke();
 
-            ctx.beginPath();
-            var firstPoint = true;
-            var x0;
-            for (var i = 0; i < this.data[color].length; i++)
+            if (this.fillArea)
             {
-               var time = this.data[color][i].time;
-               var value = this.data[color][i].value;
-               var x = (time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
-               var y = (value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
-               if (firstPoint == true)
+               // Fill area below curve
+               ctx.beginPath();
+               var firstPoint = true;
+               var x0;
+               for (var i = 0; i < series.length; i++)
                {
-                  firstPoint = false;
-                  x0 = x;
-                  ctx.moveTo(x, -y);
+                  var x = (series[i].time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+                  var y = (series[i].value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
+                  if (firstPoint == true)
+                  {
+                     firstPoint = false;
+                     x0 = x;
+                     ctx.moveTo(x, -y);
+                  }
+                  else
+                  {
+                     ctx.lineTo(x, -y);
+                  }
                }
-               else
-               {
-                  ctx.lineTo(x, -y);
-               }
+               ctx.lineTo(x, 0);
+               ctx.lineTo(x0, 0);
+               ctx.closePath();
+               ctx.fill();
             }
-            ctx.lineTo(x, 0);
-            ctx.lineTo(x0, 0);
-            ctx.closePath();
-            ctx.fill();
          }
+         else
+         {
+            // One single data point
+            ctx.beginPath();
+            var x = (series[0].time - xAxisInfo.startTime) / xAxisInfo.range * xLength;
+            var y = (series[0].value - yAxisInfo.startValue) / yAxisInfo.range * yLength;
+            ctx.arc(x, -y, this.pointSize, 0, 2 * Math.PI);
+            ctx.stroke();
+         }
+
       }
    }
    ctx.restore();

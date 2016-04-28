@@ -9,7 +9,20 @@
    Your browser does not support the HTML5 canvas tag.
 </canvas>
 <script src='LineChart.js'></script>
+<form>
+<input type="checkbox" id="showDate">Show date<br>
+<input type="checkbox" id="fillArea">Fill area below curve<br>
+<input type="checkbox" id="drawDataPoints">Draw data points<br>
+</form> 
+
 <script>
+
+   function setPreferences(theChart)
+   {
+      theChart.showDate = document.getElementById("showDate").checked;
+      theChart.fillArea = document.getElementById("fillArea").checked;
+      theChart.drawDataPoints = document.getElementById("drawDataPoints").checked;
+   }   
 
    function updateChart()
    {
@@ -23,6 +36,7 @@
       chart.addData("green", greenValue); // add data to chart
       
       // Draw chart
+      setPreferences(chart);
       chart.draw(document.getElementById("myCanvas"));
 
       setTimeout(updateChart, 1000);
@@ -51,6 +65,7 @@
    chart.addData("green", greenValue); // add data to chart
    
    // Draw chart
+   setPreferences(chart);
    chart.draw(document.getElementById("myCanvas"));
 
    setTimeout(updateChart, 1000);
