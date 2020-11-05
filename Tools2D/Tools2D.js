@@ -97,7 +97,7 @@ Tools2D.distancePointToLineSegment = function (thePoint, theLine)
 
 Tools2D.distancePointToCircle = function (thePoint, theCircle)
 {
-   var distanceCenter = distancePointToPoint(thePoint, theCircle.center);
+   var distanceCenter = Tools2D.distancePointToPoint(thePoint, theCircle.center);
    if (distanceCenter > theCircle.radius)
    {
       return distanceCenter - theCircle.radius;
