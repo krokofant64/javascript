@@ -4,15 +4,12 @@
 <script src="Tools2D.js"></script>
 <script>
 
-Tools2D.Point.prototype.draw = function(ctx, label)
+Tools2D.Circle.prototype.draw = function(ctx)
 {
+   this.center.draw(ctx);
    ctx.beginPath();
-   ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
+   ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
    ctx.stroke();
-   if (label)
-   {
-      ctx.fillText(label, this.x + 10, this.y);
-   }
 }
 
 Tools2D.Line.prototype.draw = function(ctx)
@@ -25,11 +22,25 @@ Tools2D.Line.prototype.draw = function(ctx)
    ctx.stroke();
 }
 
-Tools2D.Circle.prototype.draw = function(ctx)
+Tools2D.Point.prototype.draw = function(ctx, label)
 {
-   this.center.draw(ctx);
    ctx.beginPath();
-   ctx.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI);
+   ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
+   ctx.stroke();
+   if (label)
+   {
+      ctx.fillText(label, this.x + 10, this.y);
+   }
+}
+
+Tools2D.Rectangle.prototype.draw = function(ctx)
+{
+   this.upperLeft.draw(ctx);
+   this.lowerRight.draw(ctx);
+   ctx.beginPath();
+   var width = this.lowerRight.x - this.upperLeft.x;
+   var height = this.lowerRight.y - this.upperLeft.y;
+   ctx.rect(this.upperLeft.x, this.upperLeft.y, width, height);
    ctx.stroke();
 }
 
@@ -438,7 +449,8 @@ IntersectionLineSegmentLineSegment.draw = function(ctx)
       {
         this.line1.draw(ctx);
 	this.line2.draw(ctx);
-	var intersection = Tools2D.intersectionLineSegmentLineSegment(this.line1, this.line2);
+	var intersection;
+        intersection = Tools2D.intersectionLineSegmentLineSegment(this.line1, this.line2);
 	if (intersection)
 	{
            intersection.draw(ctx);
@@ -551,7 +563,7 @@ IntersectionLineSegmentLineSegment.help = function (event)
       }
       case "EndPoint1":
       {
-         return "Set end point pf line 1";
+         return "Set end point of line 1";
       }
       case "StartPoint2":
       {
@@ -567,6 +579,182 @@ IntersectionLineSegmentLineSegment.help = function (event)
       }      
    }
 }
+
+// ----------------------------------------------------------------------------
+
+var IntersectionLineSegmentRectangle = {};
+
+IntersectionLineSegmentRectangle.init = function ()
+{
+   this.state = "UpperLeft";
+   this.rectangle = new Tools2D.Rectangle(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0));
+   this.line = new Tools2D.Line(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0));
+}
+
+IntersectionLineSegmentRectangle.draw = function(ctx)
+{
+   switch (this.state)
+   {
+      case "UpperLeft":
+      {
+         break;
+      }
+      case "LowerRight":
+      {
+        this.rectangle.upperLeft.draw(ctx);
+        var width = this.rectangle.lowerRight.x - this.rectangle.upperLeft.x;
+        var height = this.rectangle.lowerRight.y - this.rectangle.upperLeft.y;
+	ctx.beginPath();
+        ctx.rect(this.rectangle.upperLeft.x, this.rectangle.upperLeft.y, width, height);
+        ctx.stroke();
+	break;
+      }
+      case "StartPoint":
+      {
+        this.rectangle.draw(ctx);
+	break;
+      }
+      case "EndPoint":
+      {
+        this.rectangle.draw(ctx);
+        this.line.startPoint.draw(ctx);
+	break;
+      }
+      case "ShowResult":
+      {
+        this.rectangle.draw(ctx);
+	this.line.draw(ctx);
+	var intersection;
+        intersection = Tools2D.intersectionLineSegmentRectangle(this.line, this.rectangle);
+	if (intersection)
+	{
+           intersection.draw(ctx);
+	}
+	break;
+      }
+   }
+};
+
+IntersectionLineSegmentRectangle.mouseUp = function(event)
+{
+   switch (this.state)
+   {
+      case "UpperLeft":
+      {
+         this.rectangle.upperLeft.x = event.offsetX;
+	 this.rectangle.upperLeft.y = event.offsetY;
+	 this.state = "LowerRight";
+	 break;
+      }
+      case "LowerRight":
+      {
+         this.rectangle.lowerRight.x = event.offsetX;
+	 this.rectangle.lowerRight.y = event.offsetY;
+	 this.state = "StartPoint";
+	 break;
+      }
+      case "StartPoint":
+      {
+         this.line.startPoint.x = event.offsetX;
+	 this.line.startPoint.y = event.offsetY;
+	 this.state = "EndPoint";
+	 break;
+      }      
+      case "EndPoint":
+      {
+         this.line.endPoint.x = event.offsetX;
+	 this.line.endPoint.y = event.offsetY;
+	 this.state = "ShowResult";
+	 break;
+      }      
+      case "ShowResult":
+      {
+         this.line.startPoint.x = event.offsetX;
+	 this.line.startPoint.y = event.offsetY;
+	 this.state = "EndPoint";
+	 break;
+      }
+   }
+};
+
+IntersectionLineSegmentRectangle.mouseMove = function(event)
+{
+   switch (this.state)
+   {
+      case "LowerRight":
+      {
+         this.rectangle.lowerRight.x = event.offsetX;
+	 this.rectangle.lowerRight.y = event.offsetY;
+	 break;
+      }
+      case "EndPoint":
+      {
+         this.line.endPoint.x = event.offsetX;
+	 this.line.endPoint.y = event.offsetY;
+	 break;
+      }
+   }
+};
+
+IntersectionLineSegmentRectangle.keyUp = function (event)
+{
+   if (event.key == "Backspace")
+   {
+      switch (this.state)
+      {
+         case "LowerRight":
+	 {
+	    this.state = "UpperLeft";
+	    break;
+	 }
+	 case "StartPoint":
+	 {
+	    this.state = "LowerRight";
+	    break;
+	 }
+	 case "EndPoint":
+	 {
+	 {
+	    this.state = "StartPoint";
+	    break;
+	 }
+	 }
+	 case "ShowResult":
+	 {
+	    this.state = "EndPoint";
+	    break;
+	 }
+      }
+   }
+}
+
+IntersectionLineSegmentRectangle.help = function (event)
+{
+   switch (this.state)
+   {
+      case "UpperLeft":
+      {
+         return "Set upper left point of rectangle";
+      }
+      case "LowerRight":
+      {
+         return "Set lower right point of rectangle";
+      }
+      case "StartPoint":
+      {
+         return "Set start point of line";
+      }
+      case "EndPoint":
+      {
+         return "Set end point of line";
+      }
+      case "ShowResult":
+      {
+         return "Show result";
+      }      
+   }
+}
+
 
 // ----------------------------------------------------------------------------
 
@@ -656,6 +844,7 @@ function clearAllChoices()
    highlightElement(document.getElementById("DistancePointLineSegment"), false);
    highlightElement(document.getElementById("DistancePointPoint"), false);
    highlightElement(document.getElementById("IntersectionLineSegmentLineSegment"), false);
+   highlightElement(document.getElementById("IntersectionLineSegmentRectangle"), false);
 }
 
 function useDistancePointCircle()
@@ -693,6 +882,16 @@ function useIntersectionLineSegmentLineSegment()
    behaviour.init();
    document.getElementById("help").innerHTML = behaviour.help();
 }
+
+function useIntersectionLineSegmentRectangle()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("IntersectionLineSegmentRectangle"), true);
+   behaviour = IntersectionLineSegmentRectangle;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
 </script>
 </head>
 
@@ -701,6 +900,7 @@ function useIntersectionLineSegmentLineSegment()
 <p id="DistancePointPoint" onclick="useDistancePointPoint()" style="width: 640px;">Distance Point &harr; Point</p>
 <p id="DistancePointCircle" onclick="useDistancePointCircle()" style="width: 640px;">Distance Point &harr; Circle</p>
 <p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px;">Intersection Line Segment &harr; Line Segment</p>
+<p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px;">Intersection Line Segment &harr; Rectangle</p>
 
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 

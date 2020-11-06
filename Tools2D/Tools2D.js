@@ -1,9 +1,9 @@
 var Tools2D = { };
 
-Tools2D.Point = function (theX, theY)
+Tools2D.Circle = function (theCenter, theRadius)
 {
-   this.x = theX;
-   this.y = theY;
+   this.center = theCenter;
+   this.radius = theRadius;
 };
 
 // ----------------------------------------------------------------------------
@@ -16,10 +16,18 @@ Tools2D.Line = function (theStartPoint, theEndPoint)
 
 // ----------------------------------------------------------------------------
 
-Tools2D.Circle = function (theCenter, theRadius)
+Tools2D.Point = function (theX, theY)
 {
-   this.center = theCenter;
-   this.radius = theRadius;
+   this.x = theX;
+   this.y = theY;
+};
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Rectangle = function (theUpperLeft, theLowerRight)
+{
+   this.upperLeft = theUpperLeft;
+   this.lowerRight = theLowerRight;
 };
 
 // ----------------------------------------------------------------------------
@@ -104,6 +112,69 @@ Tools2D.distancePointToCircle = function (thePoint, theCircle)
    }
    return 0.0;
 }
+
+// ---------------------------------------------------------------------------
+
+Tools2D.intersectionLineSegmentRectangle = function (theLine, theRectangle)
+{   
+   var dx = theLine.endPoint.x - theLine.startPoint.x;
+   var dy = theLine.endPoint.y - theLine.startPoint.y;
+
+   if (dx == 0 && dy == 0)
+   {
+      // no line - no intersection
+      return undefined;
+   }   
+
+   // x = x1 + dx * tx
+   // calculate tx at the intersection point with a vertical border
+   var tx;
+   if (dx != 0) 
+   {
+      var edge = (dx < 0) ? theRectangle.upperLeft.x : theRectangle.lowerRight.x; 
+      tx = (edge - theLine.startPoint.x) / dx;
+   }
+   // y = y1 + dy * ty
+   // calculate ty at the intersection point with a vertical border
+   var ty;
+   if (dy != 0) 
+   {
+      var edge = (dy < 0) ? theRectangle.upperLeft.y : theRectangle.lowerRight.y; 
+      ty = (edge - theLine.startPoint.y) / dy;
+   }
+      
+   // take the shorter one
+   var t;
+   if (dx == 0)
+   {
+      t = ty;
+   }
+   else 
+   if (dy == 0)
+   {
+      t = tx;
+   }
+   else
+   {
+      t = Math.min(tx, ty);
+   }
+   if (t < 0)
+   {
+      // start point of line is outside rectangle
+      return undefined; 
+   }
+   
+   // calculate the coordinates of the intersection point.
+   if (t <= 1)
+   {
+      return new Tools2D.Point(theLine.startPoint.x + dx * t,
+                               theLine.startPoint.y + dy * t);
+   }
+   
+   // intersection point is beyond end point of line.
+   return undefined;
+}
+
 
 // ----------------------------------------------------------------------------
 
