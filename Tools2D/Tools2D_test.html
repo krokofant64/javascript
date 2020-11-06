@@ -37,12 +37,14 @@ var behaviour = {};
 
 // ----------------------------------------------------------------------------
 
-var DistancePointCircle =
+var DistancePointCircle = { };
+
+DistancePointCircle.init = function ()
 {
-   state : "CenterPoint",
-   circle : new Tools2D.Circle(new Tools2D.Point(0, 0), 0),
-   point : new Tools2D.Point(0, 0)
-};
+   this.state = "CenterPoint";
+   this.circle = new Tools2D.Circle(new Tools2D.Point(0, 0), 0);
+   this.point = new Tools2D.Point(0, 0);
+}
 
 DistancePointCircle.draw = function(ctx)
 {
@@ -163,12 +165,14 @@ DistancePointCircle.help = function (event)
 
 // ----------------------------------------------------------------------------
 
-var DistancePointLineSegment = 
+var DistancePointLineSegment = {};
+
+DistancePointLineSegment.init = function()
 {
-   state : "StartPoint",
-   line : new Tools2D.Line( new Tools2D.Point(0, 0), new Tools2D.Point(0, 0)),
-   point : new Tools2D.Point(0, 0)
-};
+   this.state = "StartPoint";
+   this.line = new Tools2D.Line( new Tools2D.Point(0, 0), new Tools2D.Point(0, 0));
+   this.point = new Tools2D.Point(0, 0);
+}
 
 DistancePointLineSegment.draw = function(ctx)
 {
@@ -298,12 +302,113 @@ DistancePointLineSegment.help = function (event)
 
 // ----------------------------------------------------------------------------
 
-var IntersectionLineSegmentLineSegment =
+var DistancePointPoint = { };
+
+DistancePointPoint.init = function ()
 {
-   state : "StartPoint1",
-   line1 : new Tools2D.Line(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0)),
-   line2 : new Tools2D.Line(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0))
+   this.state = "Point1";
+   this.point1 = new Tools2D.Point(0, 0);
+   this.point2 = new Tools2D.Point(0, 0);
+}
+
+DistancePointPoint.draw = function(ctx)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         break;
+      }
+      case "Point2":
+      {
+        this.point1.draw(ctx);
+	break;
+      }
+      case "OtherPoint":
+      {
+        this.point1.draw(ctx);
+	var distance = Math.round(Tools2D.distancePointToPoint(this.point1, this.point2));
+	this.point2.draw(ctx, distance);
+	break;
+      }
+   }
 };
+
+DistancePointPoint.mouseUp = function(event)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         this.point1.x = event.offsetX;
+	 this.point1.y = event.offsetY;
+	 this.state = "Point2";
+	 break;
+      }
+      case "Point2":
+      {
+         this.point2.x = event.offsetX;
+	 this.point2.y = event.offsetY;
+	 this.state = "OtherPoint";
+	 break;
+      }
+      case "OtherPoint":
+      {
+         this.point2.x = event.offsetX;
+	 this.point2.y = event.offsetY;
+	 this.state = "OtherPoint";
+	 break;
+      }      
+   }
+};
+
+DistancePointPoint.mouseMove = function(event)
+{
+   // Empty
+};
+
+DistancePointPoint.keyUp = function (event)
+{
+   if (event.key == "Backspace")
+   {
+      switch (this.state)
+      {
+         case "Point2":
+	 case "OtherPoint":
+	 {
+	    this.state = "Point1";
+	    break;
+	 }
+      }
+   }
+}
+
+DistancePointPoint.help = function (event)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         return "Set first point";
+      }
+      case "Point2":
+      case "OtherPoint":
+      {
+         return "Set second point";
+      }      
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+var IntersectionLineSegmentLineSegment = {};
+
+IntersectionLineSegmentLineSegment.init = function ()
+{
+   this.state = "StartPoint1";
+   this.line1 = new Tools2D.Line(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0));
+   this.line2 = new Tools2D.Line(new Tools2D.Point(0, 0), new Tools2D.Point(0, 0));
+}
 
 IntersectionLineSegmentLineSegment.draw = function(ctx)
 {
@@ -470,7 +575,7 @@ function mouseDown(event)
    if (behaviour.mouseDown)
    {
       var text = behaviour.mouseDown(event);
-      document.getElementById("demo").innerHTML = text;
+      document.getElementById("help").innerHTML = text;
    }
 }
 
@@ -483,7 +588,7 @@ function mouseUp(event)
       var ctx = c.getContext("2d");
       ctx.clearRect(0,0, c.width, c.height);
       behaviour.draw(ctx);
-      document.getElementById("demo").innerHTML = behaviour.help();
+      document.getElementById("help").innerHTML = behaviour.help();
    }
 }
 
@@ -496,7 +601,7 @@ function mouseMove(event)
       var ctx = c.getContext("2d");
       ctx.clearRect(0,0, c.width, c.height);
       behaviour.draw(ctx);
-      document.getElementById("demo").innerHTML = behaviour.help();
+      document.getElementById("help").innerHTML = behaviour.help();
   }
 }
 
@@ -505,7 +610,7 @@ function mouseWheel(event)
    if (behaviour.mouseWheel)
    {
       behaviour.mouseWheel(event);
-      document.getElementById("demo").innerHTML = behaviour.help();
+      document.getElementById("help").innerHTML = behaviour.help();
    }
 }
 
@@ -514,7 +619,7 @@ function keyDown(event)
    if (behaviour.keyDown)
    {
       behaviour.keyDown(event);
-      document.getElementById("demo").innerHTML = behaviour.help();
+      document.getElementById("help").innerHTML = behaviour.help();
    }
 }
 
@@ -527,26 +632,87 @@ function keyUp(event)
       var ctx = c.getContext("2d");
       ctx.clearRect(0,0, c.width, c.height);
       behaviour.draw(ctx);
-      document.getElementById("demo").innerHTML = behaviour.help();
+      document.getElementById("help").innerHTML = behaviour.help();
    }
 }
 
-window.addEventListener("keydown", keyDown, false);
-window.addEventListener("keyup", keyUp, false);
+function highlightElement(element, enable)
+{
+   if (enable)
+   {
+      element.style.color = "white";
+      element.style.backgroundColor = "black";
+   }
+   else
+   {
+      element.style.color = "white";
+      element.style.backgroundColor = "grey";
+   }   
+}
 
-//behaviour = DistancePointLineSegment;
-//behaviour = DistancePointCircle;
-behaviour = IntersectionLineSegmentLineSegment;
+function clearAllChoices()
+{
+   highlightElement(document.getElementById("DistancePointCircle"), false);
+   highlightElement(document.getElementById("DistancePointLineSegment"), false);
+   highlightElement(document.getElementById("DistancePointPoint"), false);
+   highlightElement(document.getElementById("IntersectionLineSegmentLineSegment"), false);
+}
+
+function useDistancePointCircle()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("DistancePointCircle"), true);
+   behaviour = DistancePointCircle;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
+function useDistancePointLineSegment()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("DistancePointLineSegment"), true);
+   behaviour = DistancePointLineSegment;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
+function useDistancePointPoint()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("DistancePointPoint"), true);
+   behaviour = DistancePointPoint;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
+function useIntersectionLineSegmentLineSegment()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("IntersectionLineSegmentLineSegment"), true);
+   behaviour = IntersectionLineSegmentLineSegment;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
 </script>
 </head>
 
 <body>
-<p id="demo"></p>
-<canvas id="myCanvas" width="560" height="360" style="border:1px solid #000000;" 
+<p id="DistancePointLineSegment" onclick="useDistancePointLineSegment()" style="width: 640px;">Distance Point &harr; Line Segment</p>
+<p id="DistancePointPoint" onclick="useDistancePointPoint()" style="width: 640px;">Distance Point &harr; Point</p>
+<p id="DistancePointCircle" onclick="useDistancePointCircle()" style="width: 640px;">Distance Point &harr; Circle</p>
+<p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px;">Intersection Line Segment &harr; Line Segment</p>
+
+<canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 
         onmouseup="mouseUp(event)" 
 	onmousemove="mouseMove(event)"
 	onwheel="mouseWheel(event)"></canvas>
-
+<br>Help: <i id="help"></i>
 </body>
+<script>
+window.addEventListener("keydown", keyDown, false);
+window.addEventListener("keyup", keyUp, false);
+
+useDistancePointLineSegment();
+</script>
 </html>
