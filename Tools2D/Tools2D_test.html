@@ -67,20 +67,20 @@ DistancePointCircle.draw = function(ctx)
       }
       case "Radius":
       {
-        this.circle.draw(ctx);
-	break;
+         this.circle.draw(ctx);
+         break;
       }
       case "FirstPoint":
       {
-        this.circle.draw(ctx);
-	break;
+         this.circle.draw(ctx);
+         break;
       }
       case "OtherPoint":
       {
-        this.circle.draw(ctx);
-	var distance = Math.round(Tools2D.distancePointToCircle(this.point, this.circle));
-	this.point.draw(ctx, distance);
-	break;
+         this.circle.draw(ctx);
+         var distance = Math.round(Tools2D.distancePointToCircle(this.point, this.circle));
+         this.point.draw(ctx, distance);
+         break;
       }
    }
 };
@@ -92,30 +92,31 @@ DistancePointCircle.mouseUp = function(event)
       case "CenterPoint":
       {
          this.circle.center.x = event.offsetX;
-	 this.circle.center.y = event.offsetY;
+         this.circle.center.y = event.offsetY;
          this.circle.radius = 0;
-	 this.state = "Radius";
-	 break;
+         this.state = "Radius";
+         break;
       }
       case "Radius":
       {
-         this.circle.radius = Tools2D.distancePointToPoint(this.circle.center, new Tools2D.Point(event.offsetX, event.offsetY));
-	 this.state = "FirstPoint";
-	 break;
+         this.circle.radius = Tools2D.distancePointToPoint(this.circle.center, 
+                                                           new Tools2D.Point(event.offsetX, event.offsetY));
+         this.state = "FirstPoint";
+         break;
       }
       case "FirstPoint":
       {
          this.point.x = event.offsetX;
-	 this.point.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }      
       case "OtherPoint":
       {
          this.point.x = event.offsetX;
-	 this.point.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }      
    }
 };
@@ -126,8 +127,9 @@ DistancePointCircle.mouseMove = function(event)
    {
       case "Radius":
       {
-         this.circle.radius = Tools2D.distancePointToPoint(this.circle.center, new Tools2D.Point(event.offsetX, event.offsetY));
-	 break;
+         this.circle.radius = Tools2D.distancePointToPoint(this.circle.center, 
+                                                           new Tools2D.Point(event.offsetX, event.offsetY));
+         break;
       }
       
    }
@@ -140,16 +142,16 @@ DistancePointCircle.keyUp = function (event)
       switch (this.state)
       {
          case "Radius":
-	 {
-	    this.state = "CenterPoint";
-	    break;
-	 }
-	 case "FirstPoint":
-	 case "OtherPoint":
-	 {
-	    this.state = "Radius";
-	    break;
-	 }
+         {
+            this.state = "CenterPoint";
+            break;
+         }
+         case "FirstPoint":
+         case "OtherPoint":
+         {
+            this.state = "Radius";
+            break;
+         }
       }
    }
 }
@@ -195,24 +197,24 @@ DistancePointLineSegment.draw = function(ctx)
       }
       case "EndPoint":
       {
-        this.line.startPoint.draw(ctx);
-        ctx.beginPath();
-	ctx.moveTo(this.line.startPoint.x, this.line.startPoint.y);
-	ctx.lineTo(this.line.endPoint.x, this.line.endPoint.y);
-	ctx.stroke();
-	break;
+         this.line.startPoint.draw(ctx);
+         ctx.beginPath();
+         ctx.moveTo(this.line.startPoint.x, this.line.startPoint.y);
+         ctx.lineTo(this.line.endPoint.x, this.line.endPoint.y);
+         ctx.stroke();
+         break;
       }
       case "FirstPoint":
       {
-        this.line.draw(ctx);
-	break;
+         this.line.draw(ctx);
+         break;
       }
       case "OtherPoint":
       {
-        this.line.draw(ctx);
-	var distance = Math.round(Tools2D.distancePointToLineSegment(this.point, this.line));
-	this.point.draw(ctx, distance);
-	break;
+         this.line.draw(ctx);
+         var distance = Math.round(Tools2D.distancePointToLineSegment(this.point, this.line));
+         this.point.draw(ctx, distance);
+         break;
       }
    }
 };
@@ -224,32 +226,32 @@ DistancePointLineSegment.mouseUp = function(event)
       case "StartPoint":
       {
          this.line.startPoint.x = event.offsetX;
-	 this.line.startPoint.y = event.offsetY;
+         this.line.startPoint.y = event.offsetY;
          this.line.endPoint.x = event.offsetX;
-	 this.line.endPoint.y = event.offsetY;
-	 this.state = "EndPoint";
-	 break;
+         this.line.endPoint.y = event.offsetY;
+         this.state = "EndPoint";
+         break;
       }
       case "EndPoint":
       {
          this.line.endPoint.x = event.offsetX;
-	 this.line.endPoint.y = event.offsetY;
-	 this.state = "FirstPoint";
-	 break;
+         this.line.endPoint.y = event.offsetY;
+         this.state = "FirstPoint";
+         break;
       }
       case "FirstPoint":
       {
          this.point.x = event.offsetX;
-	 this.point.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }      
       case "OtherPoint":
       {
          this.point.x = event.offsetX;
-	 this.point.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }      
    }
 };
@@ -261,8 +263,8 @@ DistancePointLineSegment.mouseMove = function(event)
       case "EndPoint":
       {
          this.line.endPoint.x = event.offsetX;
-	 this.line.endPoint.y = event.offsetY;
-	 break;
+         this.line.endPoint.y = event.offsetY;
+         break;
       }
       
    }
@@ -275,18 +277,18 @@ DistancePointLineSegment.keyUp = function (event)
       switch (this.state)
       {
          case "EndPoint":
-	 {
+         {
             this.line.endPoint.x = this.line.startPoint.x;
             this.line.endPoint.y = this.line.startPoint.y;
-	    this.state = "StartPoint";
-	    break;
-	 }
-	 case "FirstPoint":
-	 case "OtherPoint":
-	 {
-	    this.state = "EndPoint";
-	    break;
-	 }
+            this.state = "StartPoint";
+            break;
+         }
+         case "FirstPoint":
+         case "OtherPoint":
+         {
+            this.state = "EndPoint";
+            break;
+         }
       }
    }
 }
@@ -332,15 +334,15 @@ DistancePointPoint.draw = function(ctx)
       }
       case "Point2":
       {
-        this.point1.draw(ctx);
-	break;
+         this.point1.draw(ctx);
+         break;
       }
       case "OtherPoint":
       {
-        this.point1.draw(ctx);
-	var distance = Math.round(Tools2D.distancePointToPoint(this.point1, this.point2));
-	this.point2.draw(ctx, distance);
-	break;
+         this.point1.draw(ctx);
+         var distance = Math.round(Tools2D.distancePointToPoint(this.point1, this.point2));
+         this.point2.draw(ctx, distance);
+         break;
       }
    }
 };
@@ -352,23 +354,23 @@ DistancePointPoint.mouseUp = function(event)
       case "Point1":
       {
          this.point1.x = event.offsetX;
-	 this.point1.y = event.offsetY;
-	 this.state = "Point2";
-	 break;
+         this.point1.y = event.offsetY;
+         this.state = "Point2";
+         break;
       }
       case "Point2":
       {
          this.point2.x = event.offsetX;
-	 this.point2.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point2.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }
       case "OtherPoint":
       {
          this.point2.x = event.offsetX;
-	 this.point2.y = event.offsetY;
-	 this.state = "OtherPoint";
-	 break;
+         this.point2.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
       }      
    }
 };
@@ -385,11 +387,11 @@ DistancePointPoint.keyUp = function (event)
       switch (this.state)
       {
          case "Point2":
-	 case "OtherPoint":
-	 {
-	    this.state = "Point1";
-	    break;
-	 }
+         case "OtherPoint":
+         {
+            this.state = "Point1";
+            break;
+         }
       }
    }
 }
@@ -431,31 +433,31 @@ IntersectionLineSegmentLineSegment.draw = function(ctx)
       }
       case "EndPoint1":
       {
-        this.line1.startPoint.draw(ctx);
-	break;
+         this.line1.startPoint.draw(ctx);
+         break;
       }
       case "StartPoint2":
       {
-        this.line1.draw(ctx);
-	break;
+         this.line1.draw(ctx);
+         break;
       }
       case "EndPoint2":
       {
-        this.line1.draw(ctx);
-        this.line2.startPoint.draw(ctx);
-	break;
+         this.line1.draw(ctx);
+         this.line2.startPoint.draw(ctx);
+         break;
       }
       case "ShowResult":
       {
-        this.line1.draw(ctx);
-	this.line2.draw(ctx);
-	var intersection;
-        intersection = Tools2D.intersectionLineSegmentLineSegment(this.line1, this.line2);
-	if (intersection)
-	{
-           intersection.draw(ctx);
-	}
-	break;
+         this.line1.draw(ctx);
+         this.line2.draw(ctx);
+         var intersection;
+         intersection = Tools2D.intersectionLineSegmentLineSegment(this.line1, this.line2);
+         if (intersection)
+         {
+            intersection.draw(ctx);
+         }
+         break;
       }
    }
 };
@@ -467,37 +469,37 @@ IntersectionLineSegmentLineSegment.mouseUp = function(event)
       case "StartPoint1":
       {
          this.line1.startPoint.x = event.offsetX;
-	 this.line1.startPoint.y = event.offsetY;
-	 this.state = "EndPoint1";
-	 break;
+         this.line1.startPoint.y = event.offsetY;
+         this.state = "EndPoint1";
+         break;
       }
       case "EndPoint1":
       {
          this.line1.endPoint.x = event.offsetX;
-	 this.line1.endPoint.y = event.offsetY;
-	 this.state = "StartPoint2";
-	 break;
+         this.line1.endPoint.y = event.offsetY;
+         this.state = "StartPoint2";
+         break;
       }
       case "StartPoint2":
       {
          this.line2.startPoint.x = event.offsetX;
-	 this.line2.startPoint.y = event.offsetY;
-	 this.state = "EndPoint2";
-	 break;
+         this.line2.startPoint.y = event.offsetY;
+         this.state = "EndPoint2";
+         break;
       }      
       case "EndPoint2":
       {
          this.line2.endPoint.x = event.offsetX;
-	 this.line2.endPoint.y = event.offsetY;
-	 this.state = "ShowResult";
-	 break;
+         this.line2.endPoint.y = event.offsetY;
+         this.state = "ShowResult";
+         break;
       }      
       case "ShowResult":
       {
          this.line2.startPoint.x = event.offsetX;
-	 this.line2.startPoint.y = event.offsetY;
-	 this.state = "EndPoint2";
-	 break;
+         this.line2.startPoint.y = event.offsetY;
+         this.state = "EndPoint2";
+         break;
       }
    }
 };
@@ -509,14 +511,14 @@ IntersectionLineSegmentLineSegment.mouseMove = function(event)
       case "EndPoint1":
       {
          this.line1.endPoint.x = event.offsetX;
-	 this.line1.endPoint.y = event.offsetY;
-	 break;
+         this.line1.endPoint.y = event.offsetY;
+         break;
       }
       case "EndPoint2":
       {
          this.line2.endPoint.x = event.offsetX;
-	 this.line2.endPoint.y = event.offsetY;
-	 break;
+         this.line2.endPoint.y = event.offsetY;
+         break;
       }
    }
 };
@@ -528,27 +530,25 @@ IntersectionLineSegmentLineSegment.keyUp = function (event)
       switch (this.state)
       {
          case "EndPoint1":
-	 {
-	    this.state = "StartPoint1";
-	    break;
-	 }
-	 case "StartPoint2":
-	 {
-	    this.state = "EndPoint1";
-	    break;
-	 }
-	 case "EndPoint2":
-	 {
-	 {
-	    this.state = "StartPoint2";
-	    break;
-	 }
-	 }
-	 case "ShowResult":
-	 {
-	    this.state = "EndPoint2";
-	    break;
-	 }
+         {
+            this.state = "StartPoint1";
+            break;
+         }
+         case "StartPoint2":
+         {
+            this.state = "EndPoint1";
+            break;
+         }
+         case "EndPoint2":
+         {
+            this.state = "StartPoint2";
+            break;
+         }
+         case "ShowResult":
+         {
+            this.state = "EndPoint2";
+            break;
+         }
       }
    }
 }
@@ -601,36 +601,37 @@ IntersectionLineSegmentRectangle.draw = function(ctx)
       }
       case "LowerRight":
       {
-        this.rectangle.upperLeft.draw(ctx);
-        var width = this.rectangle.lowerRight.x - this.rectangle.upperLeft.x;
-        var height = this.rectangle.lowerRight.y - this.rectangle.upperLeft.y;
-	ctx.beginPath();
-        ctx.rect(this.rectangle.upperLeft.x, this.rectangle.upperLeft.y, width, height);
-        ctx.stroke();
-	break;
+         this.rectangle.upperLeft.draw(ctx);
+         var width = this.rectangle.lowerRight.x - this.rectangle.upperLeft.x;
+         var height = this.rectangle.lowerRight.y - this.rectangle.upperLeft.y;
+         ctx.beginPath();
+         ctx.rect(this.rectangle.upperLeft.x, this.rectangle.upperLeft.y, width, height);
+         ctx.stroke();
+         break;
       }
       case "StartPoint":
       {
-        this.rectangle.draw(ctx);
-	break;
+         this.rectangle.draw(ctx);
+         break;
       }
       case "EndPoint":
       {
-        this.rectangle.draw(ctx);
-        this.line.startPoint.draw(ctx);
-	break;
+         this.rectangle.normalize();
+         this.rectangle.draw(ctx);
+         this.line.startPoint.draw(ctx);
+         break;
       }
       case "ShowResult":
       {
-        this.rectangle.draw(ctx);
-	this.line.draw(ctx);
-	var intersection;
-        intersection = Tools2D.intersectionLineSegmentRectangle(this.line, this.rectangle);
-	if (intersection)
-	{
-           intersection.draw(ctx);
-	}
-	break;
+         this.rectangle.draw(ctx);
+         this.line.draw(ctx);
+         var intersections;
+         intersections = Tools2D.intersectionLineSegmentRectangle(this.line, this.rectangle);
+         for (var i = 0; i < intersections.length; i++)
+         {
+            intersections[i].draw(ctx);
+         }
+         break;
       }
    }
 };
@@ -642,37 +643,37 @@ IntersectionLineSegmentRectangle.mouseUp = function(event)
       case "UpperLeft":
       {
          this.rectangle.upperLeft.x = event.offsetX;
-	 this.rectangle.upperLeft.y = event.offsetY;
-	 this.state = "LowerRight";
-	 break;
+         this.rectangle.upperLeft.y = event.offsetY;
+         this.state = "LowerRight";
+         break;
       }
       case "LowerRight":
       {
          this.rectangle.lowerRight.x = event.offsetX;
-	 this.rectangle.lowerRight.y = event.offsetY;
-	 this.state = "StartPoint";
-	 break;
+         this.rectangle.lowerRight.y = event.offsetY;
+         this.state = "StartPoint";
+         break;
       }
       case "StartPoint":
       {
          this.line.startPoint.x = event.offsetX;
-	 this.line.startPoint.y = event.offsetY;
-	 this.state = "EndPoint";
-	 break;
+         this.line.startPoint.y = event.offsetY;
+         this.state = "EndPoint";
+         break;
       }      
       case "EndPoint":
       {
          this.line.endPoint.x = event.offsetX;
-	 this.line.endPoint.y = event.offsetY;
-	 this.state = "ShowResult";
-	 break;
+         this.line.endPoint.y = event.offsetY;
+         this.state = "ShowResult";
+         break;
       }      
       case "ShowResult":
       {
          this.line.startPoint.x = event.offsetX;
-	 this.line.startPoint.y = event.offsetY;
-	 this.state = "EndPoint";
-	 break;
+         this.line.startPoint.y = event.offsetY;
+         this.state = "EndPoint";
+         break;
       }
    }
 };
@@ -684,14 +685,14 @@ IntersectionLineSegmentRectangle.mouseMove = function(event)
       case "LowerRight":
       {
          this.rectangle.lowerRight.x = event.offsetX;
-	 this.rectangle.lowerRight.y = event.offsetY;
-	 break;
+         this.rectangle.lowerRight.y = event.offsetY;
+         break;
       }
       case "EndPoint":
       {
          this.line.endPoint.x = event.offsetX;
-	 this.line.endPoint.y = event.offsetY;
-	 break;
+         this.line.endPoint.y = event.offsetY;
+         break;
       }
    }
 };
@@ -703,27 +704,25 @@ IntersectionLineSegmentRectangle.keyUp = function (event)
       switch (this.state)
       {
          case "LowerRight":
-	 {
-	    this.state = "UpperLeft";
-	    break;
-	 }
-	 case "StartPoint":
-	 {
-	    this.state = "LowerRight";
-	    break;
-	 }
-	 case "EndPoint":
-	 {
-	 {
-	    this.state = "StartPoint";
-	    break;
-	 }
-	 }
-	 case "ShowResult":
-	 {
-	    this.state = "EndPoint";
-	    break;
-	 }
+         {
+            this.state = "UpperLeft";
+            break;
+         }
+         case "StartPoint":
+         {
+            this.state = "LowerRight";
+            break;
+         }
+         case "EndPoint":
+         {
+            this.state = "StartPoint";
+            break;
+         }
+         case "ShowResult":
+         {
+            this.state = "EndPoint";
+            break;
+         }
       }
    }
 }
@@ -754,7 +753,6 @@ IntersectionLineSegmentRectangle.help = function (event)
       }      
    }
 }
-
 
 // ----------------------------------------------------------------------------
 
@@ -905,8 +903,8 @@ function useIntersectionLineSegmentRectangle()
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 
         onmouseup="mouseUp(event)" 
-	onmousemove="mouseMove(event)"
-	onwheel="mouseWheel(event)"></canvas>
+        onmousemove="mouseMove(event)"
+        onwheel="mouseWheel(event)"></canvas>
 <br>Help: <i id="help"></i>
 </body>
 <script>

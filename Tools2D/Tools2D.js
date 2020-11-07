@@ -32,6 +32,40 @@ Tools2D.Rectangle = function (theUpperLeft, theLowerRight)
 
 // ----------------------------------------------------------------------------
 
+Tools2D.Rectangle.prototype.normalize = function ()
+{
+   var xmin;
+   var xmax;
+   if (this.upperLeft.x < this.lowerRight.x)
+   {
+      xmin = this.upperLeft.x;
+      xmax = this.lowerRight.x;
+   }
+   else
+   {
+      xmin = this.lowerRight.x;
+      xmax = this.upperLeft.x;
+   }
+   var ymin;
+   var ymax;
+   if (this.upperLeft.y < this.lowerRight.y)
+   {
+      ymin = this.upperLeft.y;
+      ymax = this.lowerRight.y
+   }
+   else
+   {
+      ymin = this.lowerRight.y;
+      ymax = this.upperLeft.y
+   }
+   this.upperLeft.x = xmin;
+   this.upperLeft.y = ymin;
+   this.lowerRight.x = xmax;
+   this.lowerRight.y = ymax;
+};
+
+// ----------------------------------------------------------------------------
+
 Tools2D.distancePointToPoint = function (thePoint0, thePoint1)
 {
    var dx = thePoint0.x - thePoint1.x;
@@ -117,64 +151,56 @@ Tools2D.distancePointToCircle = function (thePoint, theCircle)
 
 Tools2D.intersectionLineSegmentRectangle = function (theLine, theRectangle)
 {   
+   var result = [];
+   
+   theRectangle.normalize();
+   
    var dx = theLine.endPoint.x - theLine.startPoint.x;
    var dy = theLine.endPoint.y - theLine.startPoint.y;
-
-   if (dx == 0 && dy == 0)
-   {
-      // no line - no intersection
-      return undefined;
-   }   
-
-   // x = x1 + dx * tx
-   // calculate tx at the intersection point with a vertical border
-   var tx;
    if (dx != 0) 
    {
-      var edge = (dx < 0) ? theRectangle.upperLeft.x : theRectangle.lowerRight.x; 
-      tx = (edge - theLine.startPoint.x) / dx;
+      var k1 = (theRectangle.upperLeft.x - theLine.startPoint.x) / dx;
+      if (0 <= k1 && k1 <= 1)
+      {
+         var y = theLine.startPoint.y + k1 * dy;
+         if (theRectangle.upperLeft.y <= y && y <= theRectangle.lowerRight.y)
+         { 
+            result.push(new Tools2D.Point(theRectangle.upperLeft.x, y));	
+         }
+      }
+      var k2 = (theRectangle.lowerRight.x - theLine.startPoint.x) / dx;
+      if (0 <= k2 && k2 <= 1)
+      {
+         var y = theLine.startPoint.y + k2 * dy;
+         if (theRectangle.upperLeft.y <= y && y <= theRectangle.lowerRight.y)
+         { 
+            result.push(new Tools2D.Point(theRectangle.lowerRight.x, y));	
+         }
+      }
    }
-   // y = y1 + dy * ty
-   // calculate ty at the intersection point with a vertical border
-   var ty;
-   if (dy != 0) 
+   if (dy != 0)
    {
-      var edge = (dy < 0) ? theRectangle.upperLeft.y : theRectangle.lowerRight.y; 
-      ty = (edge - theLine.startPoint.y) / dy;
+      var k1 = (theRectangle.upperLeft.y - theLine.startPoint.y) / dy;
+      if (0 <= k1 && k1 <= 1)
+      {
+         var x = theLine.startPoint.x + k1 * dx;
+         if (theRectangle.upperLeft.x <= x && x <= theRectangle.lowerRight.x)
+         {
+            result.push(new Tools2D.Point(x, theRectangle.upperLeft.y));
+         }
+      }
+      var k2 = (theRectangle.lowerRight.y - theLine.startPoint.y) / dy;
+      if (0 <= k2 && k2 <= 1)
+      {
+         var x = theLine.startPoint.x + k2 * dx;
+         if (theRectangle.upperLeft.x <= x && x <= theRectangle.lowerRight.x)
+         {
+            result.push(new Tools2D.Point(x, theRectangle.lowerRight.y));
+         }
+      }
    }
-      
-   // take the shorter one
-   var t;
-   if (dx == 0)
-   {
-      t = ty;
-   }
-   else 
-   if (dy == 0)
-   {
-      t = tx;
-   }
-   else
-   {
-      t = Math.min(tx, ty);
-   }
-   if (t < 0)
-   {
-      // start point of line is outside rectangle
-      return undefined; 
-   }
-   
-   // calculate the coordinates of the intersection point.
-   if (t <= 1)
-   {
-      return new Tools2D.Point(theLine.startPoint.x + dx * t,
-                               theLine.startPoint.y + dy * t);
-   }
-   
-   // intersection point is beyond end point of line.
-   return undefined;
+   return result;	   
 }
-
 
 // ----------------------------------------------------------------------------
 
