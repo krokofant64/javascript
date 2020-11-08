@@ -32,6 +32,15 @@ Tools2D.Rectangle = function (theUpperLeft, theLowerRight)
 
 // ----------------------------------------------------------------------------
 
+Tools2D.Triangle = function (thePoint1, thePoint2, thePoint3)
+{
+   this.point1 = thePoint1;
+   this.point2 = thePoint2;
+   this.point3 = thePoint3;
+}
+
+// ----------------------------------------------------------------------------
+
 Tools2D.Rectangle.prototype.normalize = function ()
 {
    var xmin;
@@ -225,4 +234,27 @@ Tools2D.intersectionLineSegmentLineSegment = function (theLine0, theLine1)
       }
    }
    return undefined; // No intersection
+}
+
+// ----------------------------------------------------------------------------
+
+function pointInTriangle(theTriangle, thePoint)
+{
+   var denominator = ((theTriangle.point2.y - theTriangle.point3.y) * 
+                      (theTriangle.point1.x - theTriangle.point3.x) + 
+                      (theTriangle.point3.x - theTriangle.point2.x) * 
+                      (theTriangle.point1.y - theTriangle.point3.y));
+   if (denominator != 0)
+   {
+      var a = ((theTriangle.point2.y - theTriangle.point3.y) * (thePoint.x - theTriangle.point3.x) + 
+		       (theTriangle.point3.x - theTriangle.point2.x) * (thePoint.y - theTriangle.point3.y)) / denominator;
+      var b = ((theTriangle.point3.y - theTriangle.point1.y) * (thePoint.x - theTriangle.point3.x) + 
+               (theTriangle.point1.x - theTriangle.point3.x) * (thePoint.y - theTriangle.point3.y)) / denominator;
+      var c = 1 - a - b;
+
+      return 0 <= a && a <= 1 && 
+             0 <= b && b <= 1 && 
+             0 <= c && c <= 1;
+   }
+   return false;
 }
