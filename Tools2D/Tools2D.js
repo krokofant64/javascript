@@ -238,7 +238,7 @@ Tools2D.intersectionLineSegmentLineSegment = function (theLine0, theLine1)
 
 // ----------------------------------------------------------------------------
 
-function pointInTriangle(theTriangle, thePoint)
+Tools2D.pointInTriangle = function (theTriangle, thePoint)
 {
    var denominator = ((theTriangle.point2.y - theTriangle.point3.y) * 
                       (theTriangle.point1.x - theTriangle.point3.x) + 

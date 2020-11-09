@@ -44,6 +44,19 @@ Tools2D.Rectangle.prototype.draw = function(ctx)
    ctx.stroke();
 }
 
+Tools2D.Triangle.prototype.draw = function(ctx)
+{
+   this.point1.draw(ctx);
+   this.point2.draw(ctx);
+   this.point3.draw(ctx);
+   ctx.beginPath();
+   ctx.moveTo(this.point1.x, this.point1.y);
+   ctx.lineTo(this.point2.x, this.point2.y);
+   ctx.lineTo(this.point3.x, this.point3.y);
+   ctx.lineTo(this.point1.x, this.point1.y);
+   ctx.stroke();
+}
+
 var behaviour = {};
 
 // ----------------------------------------------------------------------------
@@ -756,6 +769,184 @@ IntersectionLineSegmentRectangle.help = function (event)
 
 // ----------------------------------------------------------------------------
 
+var PointInTriangle = {};
+
+PointInTriangle.init = function ()
+{
+   this.state = "Point1";
+   this.triangle = new Tools2D.Triangle(new Tools2D.Point(0, 0), 
+                                        new Tools2D.Point(0, 0), 
+					new Tools2D.Point(0, 0));
+   this.point = new Tools2D.Point(0, 0);
+}
+
+PointInTriangle.draw = function(ctx)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         break;
+      }
+      case "Point2":
+      {
+         this.triangle.point1.draw(ctx);
+         ctx.beginPath();
+	 ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
+	 ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
+         ctx.stroke();
+         break;
+      }
+      case "Point3":
+      {
+         this.triangle.point1.draw(ctx);
+         this.triangle.point2.draw(ctx);
+         ctx.beginPath();
+	 ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
+	 ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
+	 ctx.lineTo(this.triangle.point3.x, this.triangle.point3.y);
+	 ctx.lineTo(this.triangle.point1.x, this.triangle.point1.y);
+         ctx.stroke();
+         break;
+      }
+      case "Point":
+      {
+         this.triangle.draw(ctx);
+         break;
+      }
+      case "OtherPoint":
+      {
+         this.triangle.draw(ctx);
+	 if (Tools2D.pointInTriangle(this.triangle, this.point))
+	 {
+            this.point.draw(ctx, "Yes");
+	 }
+	 else
+	 {
+            this.point.draw(ctx, "No");
+	 }
+         break;
+      }
+   }
+};
+
+PointInTriangle.mouseUp = function(event)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         this.triangle.point1.x = event.offsetX;
+         this.triangle.point1.y = event.offsetY;
+         this.triangle.point2.x = this.triangle.point1.x;
+         this.triangle.point2.y = this.triangle.point1.y;
+         this.state = "Point2";
+         break;
+      }
+      case "Point2":
+      {
+         this.triangle.point2.x = event.offsetX;
+         this.triangle.point2.y = event.offsetY;
+         this.triangle.point3.x = this.triangle.point2.x;
+         this.triangle.point3.y = this.triangle.point2.y;
+         this.state = "Point3";
+         break;
+      }
+      case "Point3":
+      {
+         this.triangle.point3.x = event.offsetX;
+         this.triangle.point3.y = event.offsetY;
+         this.state = "Point";
+         break;
+      }      
+      case "Point":
+      {
+         this.point.x = event.offsetX;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
+      }      
+      case "OtherPoint":
+      {
+         this.point.x = event.offsetX;
+         this.point.y = event.offsetY;
+         this.state = "OtherPoint";
+         break;
+      }
+   }
+};
+
+PointInTriangle.mouseMove = function(event)
+{
+   switch (this.state)
+   {
+      case "Point2":
+      {
+         this.triangle.point2.x = event.offsetX;
+         this.triangle.point2.y = event.offsetY;
+         break;
+      }
+      case "Point3":
+      {
+         this.triangle.point3.x = event.offsetX;
+         this.triangle.point3.y = event.offsetY;
+         break;
+      }
+   }
+};
+
+PointInTriangle.keyUp = function (event)
+{
+   if (event.key == "Backspace")
+   {
+      switch (this.state)
+      {
+         case "Point2":
+         {
+            this.state = "Point1";
+            break;
+         }
+         case "Point3":
+         {
+            this.state = "Point2";
+            break;
+         }
+         case "Point":
+         case "OtherPoint":
+         {
+            this.state = "Point3";
+            break;
+         }
+      }
+   }
+}
+
+PointInTriangle.help = function (event)
+{
+   switch (this.state)
+   {
+      case "Point1":
+      {
+         return "Set point 1 of triangle";
+      }
+      case "Point2":
+      {
+         return "Set point 2 of triangle";
+      }
+      case "Point3":
+      {
+         return "Set point 3 of triangle";
+      }
+      case "Point":
+      case "OtherPoint":
+      {
+         return "Set point";
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
 function mouseDown(event) 
 {
    if (behaviour.mouseDown)
@@ -843,6 +1034,7 @@ function clearAllChoices()
    highlightElement(document.getElementById("DistancePointPoint"), false);
    highlightElement(document.getElementById("IntersectionLineSegmentLineSegment"), false);
    highlightElement(document.getElementById("IntersectionLineSegmentRectangle"), false);
+   highlightElement(document.getElementById("PointInTriangle"), false);
 }
 
 function useDistancePointCircle()
@@ -890,6 +1082,15 @@ function useIntersectionLineSegmentRectangle()
    document.getElementById("help").innerHTML = behaviour.help();
 }
 
+function usePointInTriangle()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("PointInTriangle"), true);
+   behaviour = PointInTriangle;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
 </script>
 </head>
 
@@ -899,6 +1100,7 @@ function useIntersectionLineSegmentRectangle()
 <p id="DistancePointCircle" onclick="useDistancePointCircle()" style="width: 640px;">Distance Point &harr; Circle</p>
 <p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px;">Intersection Line Segment &harr; Line Segment</p>
 <p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px;">Intersection Line Segment &harr; Rectangle</p>
+<p id="PointInTriangle" onclick="usePointInTriangle()" style="width: 640px;">Point in Triangle</p>
 
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 
