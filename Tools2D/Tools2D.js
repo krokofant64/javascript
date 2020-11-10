@@ -1,5 +1,9 @@
 var Tools2D = { };
 
+// ----------------------------------------------------------------------------
+// Geometric Primitives:
+// ----------------------------------------------------------------------------
+
 Tools2D.Circle = function (theCenter, theRadius)
 {
    this.center = theCenter;
@@ -29,15 +33,6 @@ Tools2D.Rectangle = function (theUpperLeft, theLowerRight)
    this.upperLeft = theUpperLeft;
    this.lowerRight = theLowerRight;
 };
-
-// ----------------------------------------------------------------------------
-
-Tools2D.Triangle = function (thePoint1, thePoint2, thePoint3)
-{
-   this.point1 = thePoint1;
-   this.point2 = thePoint2;
-   this.point3 = thePoint3;
-}
 
 // ----------------------------------------------------------------------------
 
@@ -73,6 +68,134 @@ Tools2D.Rectangle.prototype.normalize = function ()
    this.lowerRight.y = ymax;
 };
 
+// ----------------------------------------------------------------------------
+
+Tools2D.Triangle = function (thePoint1, thePoint2, thePoint3)
+{
+   this.point1 = thePoint1;
+   this.point2 = thePoint2;
+   this.point3 = thePoint3;
+}
+
+// ----------------------------------------------------------------------------
+// Transformation Matrix:
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a transformation matrix
+ */
+Tools2D.Matrix = function()
+{
+   switch (arguments.length)
+   {
+      case 0: // Identity matrix
+      {
+         this.matrix = [[1, 0, 0],
+                        [0, 1, 0],
+                        [0, 0, 1]];
+         break;
+      }
+      case 1: // Copy other matrix
+      {
+         this.matrix = [[arguments[0][0][0], arguments[0][0][1], arguments[0][0][2]],
+                        [arguments[0][1][0], arguments[0][1][1], arguments[0][1][2]],
+                        [0 ,                 0,                  1]];
+      }
+      case 6: // Transformation matrix with given values
+      {
+         this.matrix = [[arguments[0], arguments[1], arguments[2]],
+                        [arguments[3], arguments[4], arguments[5]],
+                        0,             0,            1];
+         break;
+      }
+      default:
+      {
+         var matrixType = arguments[0];
+         if (matrixType == "rotate")
+         {
+            if (arguments.length == 2)
+            {
+               var angle = arguments[1];
+               this.matrix = [[ Math.cos(angle), Math.sin(angle), 0],
+                              [-Math.sin(angle), Math.cos(angle), 0],
+                              [0, 0, 1]];
+            }
+            else
+            {
+               throw "Second argument must be an angle";
+            }
+         }
+         else
+         if (matrixType == "translate")
+         {
+            if (arguments.length == 3)
+            {
+               var dx = arguments[1];
+               var dy = arguments[2];
+               this.matrix = [[1, 0, dx],
+                              [0, 1, dy],
+                              [0, 0, 1]];
+            }
+            else
+            {
+               throw "Second and third argument must be a translation";
+            }
+         }
+         else
+         if (matrixType == "scale")
+         {
+            if (arguments.length == 3)
+            {
+               var kx = arguments[1];
+               var ky = arguments[2];
+               this.matrix = [[kx,  0, 0],
+                              [ 0, ky, 0],
+                              [ 0,  0, 1]];
+            }
+            else
+            {
+               throw "Second and third argument must be a scaling factor";
+            }
+         }
+         else
+         {
+            throw "First argument must be \"rotate\", \"translate\", or \"scale\"";
+         }
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * Multiply transformation matrix by another transformation matrix
+ * @param theOther the other transformation matrix
+ */
+Tools2D.Matrix.prototype.multiply = function(theOther)
+{
+   var c = [];
+   c[0] = [];
+   c[0][0] = this.matrix[0][0]*theOther.matrix[0][0] + this.matrix[0][1]*theOther.matrix[1][0];
+   c[0][1] = this.matrix[0][0]*theOther.matrix[0][1] + this.matrix[0][1]*theOther.matrix[1][1];
+   c[0][2] = this.matrix[0][0]*theOther.matrix[0][2] + this.matrix[0][1]*theOther.matrix[1][2] + this.matrix[0][2];      
+   c[1] = [];
+   c[1][0] = this.matrix[1][0]*theOther.matrix[0][0] + this.matrix[1][1]*theOther.matrix[1][0];
+   c[1][1] = this.matrix[1][0]*theOther.matrix[0][1] + this.matrix[1][1]*theOther.matrix[1][1];
+   c[1][2] = this.matrix[1][0]*theOther.matrix[0][2] + this.matrix[1][1]*theOther.matrix[1][2] + this.matrix[1][2];
+   c[2] = [];   
+   c[2][0] = 0;
+   c[2][1] = 0;
+   c[2][2] = 1;
+   this.matrix = c;
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+// ----------------------------------------------------------------------------
+// Geometric Tools:
 // ----------------------------------------------------------------------------
 
 Tools2D.distancePointToPoint = function (thePoint0, thePoint1)
