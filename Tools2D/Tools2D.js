@@ -86,83 +86,18 @@ Tools2D.Triangle = function (thePoint1, thePoint2, thePoint3)
  */
 Tools2D.Matrix = function()
 {
-   switch (arguments.length)
-   {
-      case 0: // Identity matrix
-      {
-         this.matrix = [[1, 0, 0],
-                        [0, 1, 0],
-                        [0, 0, 1]];
-         break;
-      }
-      case 1: // Copy other matrix
-      {
-         this.matrix = [[arguments[0][0][0], arguments[0][0][1], arguments[0][0][2]],
-                        [arguments[0][1][0], arguments[0][1][1], arguments[0][1][2]],
-                        [0 ,                 0,                  1]];
-      }
-      case 6: // Transformation matrix with given values
-      {
-         this.matrix = [[arguments[0], arguments[1], arguments[2]],
-                        [arguments[3], arguments[4], arguments[5]],
-                        0,             0,            1];
-         break;
-      }
-      default:
-      {
-         var matrixType = arguments[0];
-         if (matrixType == "rotate")
-         {
-            if (arguments.length == 2)
-            {
-               var angle = arguments[1];
-               this.matrix = [[ Math.cos(angle), Math.sin(angle), 0],
-                              [-Math.sin(angle), Math.cos(angle), 0],
-                              [0, 0, 1]];
-            }
-            else
-            {
-               throw "Second argument must be an angle";
-            }
-         }
-         else
-         if (matrixType == "translate")
-         {
-            if (arguments.length == 3)
-            {
-               var dx = arguments[1];
-               var dy = arguments[2];
-               this.matrix = [[1, 0, dx],
-                              [0, 1, dy],
-                              [0, 0, 1]];
-            }
-            else
-            {
-               throw "Second and third argument must be a translation";
-            }
-         }
-         else
-         if (matrixType == "scale")
-         {
-            if (arguments.length == 3)
-            {
-               var kx = arguments[1];
-               var ky = arguments[2];
-               this.matrix = [[kx,  0, 0],
-                              [ 0, ky, 0],
-                              [ 0,  0, 1]];
-            }
-            else
-            {
-               throw "Second and third argument must be a scaling factor";
-            }
-         }
-         else
-         {
-            throw "First argument must be \"rotate\", \"translate\", or \"scale\"";
-         }
-      }
-   }
+   this.matrix = [[1, 0, 0],
+                  [0, 1, 0],
+                  [0, 0, 1]];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Matrix.prototype.clone = function ()
+{
+   return [[this.matrix[0][0], this.matrix[0][1], this.matrix[0][2]],
+           [this.matrix[1][0], this.matrix[1][1], this.matrix[1][2]],
+           [                0,                 0,                 1]]
 }
 
 // ----------------------------------------------------------------------------
@@ -171,7 +106,7 @@ Tools2D.Matrix = function()
  * Multiply transformation matrix by another transformation matrix
  * @param theOther the other transformation matrix
  */
-Tools2D.Matrix.prototype.multiply = function(theOther)
+Tools2D.Matrix.prototype.multiplyWith = function (theOther)
 {
    var c = [];
    c[0] = [];
@@ -191,8 +126,51 @@ Tools2D.Matrix.prototype.multiply = function(theOther)
 
 // ----------------------------------------------------------------------------
 
+Tools2D.Matrix.prototype.setMatrix = function (theElement00, theElement01, theElement02,
+                                               theElement10, theElement11, theElement12)
+{
+   this.matrix = [[theElement00, theElement01, theElement02],
+                  [theElement10, theElement11, theElement12],
+                  0,             0,            1];
+}
 
+// ----------------------------------------------------------------------------
 
+Tools2D.Matrix.prototype.setRotationMatrix = function (theAngle)
+{
+   var cos = Math.cos(theAngle);
+   var sin = Math.sin(theAngle);
+   this.matrix = [[ cos, sin, 0],
+                  [-sin, cos, 0],
+                  [   0,   0, 1]];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Matrix.prototype.setScalingMatrix = function (theScaleX, theScaleY)
+{
+   this.matrix = [[theScaleX,         0, 0],
+                  [        0, theScaleY, 0],
+                  [        0,         0, 1]];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Matrix.prototype.setTranslationMatrix = function (theDx, theDy)
+{
+   this.matrix = [[1, 0, theDx],
+                  [0, 1, theDy],
+                  [0, 0,     1]];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Matrix.prototype.transformPoint = function (thePoint)
+{
+   var x = this.matrix[0][0] * thePoint.x + this.matrix[0][1] * thePoint.y + this.matrix[0][2];
+   var y = this.matrix[1][0] * thePoint.x + this.matrix[1][1] * thePoint.y + this.matrix[1][2];
+   return new Point(x, y);
+}
 
 // ----------------------------------------------------------------------------
 // Geometric Tools:
