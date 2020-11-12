@@ -57,6 +57,14 @@ Tools2D.Triangle.prototype.draw = function(ctx)
    ctx.stroke();
 }
 
+Tools2D.Triangle.prototype.transform = function (theMatrix)
+{
+   var point1 = theMatrix.transformPoint(this.point1);
+   var point2 = theMatrix.transformPoint(this.point2);
+   var point3 = theMatrix.transformPoint(this.point3);
+   return new Tools2D.Triangle(point1, point2, point3);
+}
+
 var behaviour = {};
 
 // ----------------------------------------------------------------------------
@@ -776,7 +784,7 @@ PointInTriangle.init = function ()
    this.state = "Point1";
    this.triangle = new Tools2D.Triangle(new Tools2D.Point(0, 0), 
                                         new Tools2D.Point(0, 0), 
-					new Tools2D.Point(0, 0));
+                                        new Tools2D.Point(0, 0));
    this.point = new Tools2D.Point(0, 0);
 }
 
@@ -792,8 +800,8 @@ PointInTriangle.draw = function(ctx)
       {
          this.triangle.point1.draw(ctx);
          ctx.beginPath();
-	 ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
-	 ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
+         ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
+         ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
          ctx.stroke();
          break;
       }
@@ -802,10 +810,10 @@ PointInTriangle.draw = function(ctx)
          this.triangle.point1.draw(ctx);
          this.triangle.point2.draw(ctx);
          ctx.beginPath();
-	 ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
-	 ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
-	 ctx.lineTo(this.triangle.point3.x, this.triangle.point3.y);
-	 ctx.lineTo(this.triangle.point1.x, this.triangle.point1.y);
+         ctx.moveTo(this.triangle.point1.x, this.triangle.point1.y);
+         ctx.lineTo(this.triangle.point2.x, this.triangle.point2.y);
+         ctx.lineTo(this.triangle.point3.x, this.triangle.point3.y);
+         ctx.lineTo(this.triangle.point1.x, this.triangle.point1.y);
          ctx.stroke();
          break;
       }
@@ -817,14 +825,14 @@ PointInTriangle.draw = function(ctx)
       case "OtherPoint":
       {
          this.triangle.draw(ctx);
-	 if (Tools2D.pointInTriangle(this.triangle, this.point))
-	 {
+         if (Tools2D.pointInTriangle(this.triangle, this.point))
+         {
             this.point.draw(ctx, "Yes");
-	 }
-	 else
-	 {
+         }
+         else
+         {
             this.point.draw(ctx, "No");
-	 }
+         }
          break;
       }
    }
@@ -947,6 +955,82 @@ PointInTriangle.help = function (event)
 
 // ----------------------------------------------------------------------------
 
+var TransformationMatrix = {};
+
+TransformationMatrix.init = function ()
+{
+   this.triangle = new Tools2D.Triangle(new Tools2D.Point(100, 160), 
+                                        new Tools2D.Point(220, 100), 
+                                        new Tools2D.Point(220, 220));
+   this.pivotPoint = new Tools2D.Point((100 + 220 + 220) / 3, (160 + 100 + 220) / 3);
+}
+
+TransformationMatrix.draw = function(ctx)
+{
+   this.triangle.draw(ctx);
+   this.pivotPoint.draw(ctx, "pivot");
+};
+
+TransformationMatrix.mouseUp = function(event)
+{
+   this.pivotPoint.x = event.offsetX;
+   this.pivotPoint.y = event.offsetY;
+};
+
+TransformationMatrix.mouseMove = function(event)
+{
+} ;
+
+TransformationMatrix.keyUp = function (event)
+{
+   if (event.key == "a")
+   {
+      var matrix = Tools2D.Matrix.translationMatrix(-5, 0);
+      this.triangle = this.triangle.transform(matrix);
+   }
+   else
+   if (event.key == "d")
+   {
+      var matrix = Tools2D.Matrix.translationMatrix(5, 0);
+      this.triangle = this.triangle.transform(matrix);
+   }
+   else
+   if (event.key == "w")
+   {
+      var matrix = Tools2D.Matrix.translationMatrix(0, -5);
+      this.triangle = this.triangle.transform(matrix);
+   }
+   else
+   if (event.key == "s")
+   {
+      var matrix = Tools2D.Matrix.translationMatrix(0, 5);
+      this.triangle = this.triangle.transform(matrix);
+   }
+   else
+   if (event.key == "q")
+   {
+       var matrix = Tools2D.Matrix.translationMatrix(this.pivotPoint.x, this.pivotPoint.y);
+       matrix.multiplyBy(Tools2D.Matrix.rotationMatrix(Math.PI / 180 * 15));
+       matrix.multiplyBy(Tools2D.Matrix.translationMatrix(-this.pivotPoint.x, -this.pivotPoint.y));
+       this.triangle = this.triangle.transform(matrix);  
+   }
+   else
+   if (event.key == "e")
+   {
+       var matrix = Tools2D.Matrix.translationMatrix(this.pivotPoint.x, this.pivotPoint.y);
+       matrix.multiplyBy(Tools2D.Matrix.rotationMatrix(-Math.PI / 180 * 15));
+       matrix.multiplyBy(Tools2D.Matrix.translationMatrix(-this.pivotPoint.x, -this.pivotPoint.y));
+       this.triangle = this.triangle.transform(matrix);  
+   }
+};
+
+TransformationMatrix.help = function (event)
+{
+   return "Move: 'a' = left, 'd' = right, 'w' = up, 's' = down. Rotate: 'q' = ccw, 'e' = cw. Set pivot: left click";
+};
+
+// ----------------------------------------------------------------------------
+
 function mouseDown(event) 
 {
    if (behaviour.mouseDown)
@@ -1035,6 +1119,7 @@ function clearAllChoices()
    highlightElement(document.getElementById("IntersectionLineSegmentLineSegment"), false);
    highlightElement(document.getElementById("IntersectionLineSegmentRectangle"), false);
    highlightElement(document.getElementById("PointInTriangle"), false);
+   highlightElement(document.getElementById("TransformationMatrix"), false);
 }
 
 function useDistancePointCircle()
@@ -1091,6 +1176,16 @@ function usePointInTriangle()
    document.getElementById("help").innerHTML = behaviour.help();
 }
 
+function useTransformationMatrix()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("TransformationMatrix"), true);
+   behaviour = TransformationMatrix;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
+
+
 </script>
 </head>
 
@@ -1101,6 +1196,7 @@ function usePointInTriangle()
 <p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px;">Intersection Line Segment &harr; Line Segment</p>
 <p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px;">Intersection Line Segment &harr; Rectangle</p>
 <p id="PointInTriangle" onclick="usePointInTriangle()" style="width: 640px;">Point in Triangle</p>
+<p id="TransformationMatrix" onclick="useTransformationMatrix()" style="width: 640px;">Transformation Matrix</p>
 
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 

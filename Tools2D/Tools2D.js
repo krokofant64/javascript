@@ -84,11 +84,21 @@ Tools2D.Triangle = function (thePoint1, thePoint2, thePoint3)
 /**
  * Create a transformation matrix
  */
-Tools2D.Matrix = function()
+Tools2D.Matrix = function (theElement00, theElement01, theElement02,
+                           theElement10, theElement11, theElement12)
 {
-   this.matrix = [[1, 0, 0],
-                  [0, 1, 0],
-                  [0, 0, 1]];
+   if (arguments.length == 0)
+   {
+      this.matrix = [[1, 0, 0],
+                     [0, 1, 0],
+                     [0, 0, 1]];
+   }
+   else
+   {
+      this.matrix =  [[theElement00, theElement01, theElement02],
+                      [theElement10, theElement11, theElement12],
+                      [           0,             0,           1]];
+   }
 }
 
 // ----------------------------------------------------------------------------
@@ -106,7 +116,7 @@ Tools2D.Matrix.prototype.clone = function ()
  * Multiply transformation matrix by another transformation matrix
  * @param theOther the other transformation matrix
  */
-Tools2D.Matrix.prototype.multiplyWith = function (theOther)
+Tools2D.Matrix.prototype.multiplyBy = function (theOther)
 {
    var c = [];
    c[0] = [];
@@ -126,41 +136,28 @@ Tools2D.Matrix.prototype.multiplyWith = function (theOther)
 
 // ----------------------------------------------------------------------------
 
-Tools2D.Matrix.prototype.setMatrix = function (theElement00, theElement01, theElement02,
-                                               theElement10, theElement11, theElement12)
-{
-   this.matrix = [[theElement00, theElement01, theElement02],
-                  [theElement10, theElement11, theElement12],
-                  0,             0,            1];
-}
-
-// ----------------------------------------------------------------------------
-
-Tools2D.Matrix.prototype.setRotationMatrix = function (theAngle)
+Tools2D.Matrix.rotationMatrix = function (theAngle)
 {
    var cos = Math.cos(theAngle);
    var sin = Math.sin(theAngle);
-   this.matrix = [[ cos, sin, 0],
-                  [-sin, cos, 0],
-                  [   0,   0, 1]];
+   return new Tools2D.Matrix( cos, sin, 0,
+                             -sin, cos, 0);
 }
 
 // ----------------------------------------------------------------------------
 
-Tools2D.Matrix.prototype.setScalingMatrix = function (theScaleX, theScaleY)
+Tools2D.Matrix.scalingMatrix = function (theScaleX, theScaleY)
 {
-   this.matrix = [[theScaleX,         0, 0],
-                  [        0, theScaleY, 0],
-                  [        0,         0, 1]];
+   return new Tools2D.Matrix(theScaleX,         0, 0,
+                                     0, theScaleY, 0);
 }
 
 // ----------------------------------------------------------------------------
 
-Tools2D.Matrix.prototype.setTranslationMatrix = function (theDx, theDy)
+Tools2D.Matrix.translationMatrix = function (theDx, theDy)
 {
-   this.matrix = [[1, 0, theDx],
-                  [0, 1, theDy],
-                  [0, 0,     1]];
+   return new Tools2D.Matrix(1, 0, theDx,
+                             0, 1, theDy);
 }
 
 // ----------------------------------------------------------------------------
@@ -169,7 +166,7 @@ Tools2D.Matrix.prototype.transformPoint = function (thePoint)
 {
    var x = this.matrix[0][0] * thePoint.x + this.matrix[0][1] * thePoint.y + this.matrix[0][2];
    var y = this.matrix[1][0] * thePoint.x + this.matrix[1][1] * thePoint.y + this.matrix[1][2];
-   return new Point(x, y);
+   return new Tools2D.Point(x, y);
 }
 
 // ----------------------------------------------------------------------------
