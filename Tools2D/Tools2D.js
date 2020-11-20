@@ -28,6 +28,69 @@ Tools2D.Point = function (theX, theY)
 
 // ----------------------------------------------------------------------------
 
+Tools2D.Polygon = function ()
+{
+   this.points = [];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Polygon.prototype.addPoint = function (thePoint, theIndex)
+{
+   if (theIndex == undefined)
+   {
+      // Add last point
+      this.points.push(thePoint);
+   }
+   else
+   {
+      this.points.splice(theIndex, 0, thePoint);
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Polygon.prototype.area = function ()
+{
+   if (this.points.length < 3)
+   {
+      return 0;
+   }
+   
+   var area = 0;
+   for (var i1 = 0; i1 < this.points.length; i1++)
+   {
+      var i2 = (i1 + 1) % this.points.length;
+      area += this.points[i1].x * this.points[i2].y - 
+              this.points[i1].y * this.points[i2].x;
+   }
+   return area / 2;
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Polygon.prototype.clear = function ()
+{
+   this.points = [];
+}
+
+// ----------------------------------------------------------------------------
+
+Tools2D.Polygon.prototype.removePoint = function (theIndex)
+{
+   if (theIndex == undefined)
+   {
+      // Remove last point
+      this.points.pop();
+   }
+   else
+   {
+      this.points.splice(theIndex, 1);
+   }
+}
+
+// ----------------------------------------------------------------------------
+
 Tools2D.Rectangle = function (theUpperLeft, theLowerRight)
 {
    this.upperLeft = theUpperLeft;
@@ -252,6 +315,32 @@ Tools2D.distancePointToCircle = function (thePoint, theCircle)
       return distanceCenter - theCircle.radius;
    }
    return 0.0;
+}
+
+// ---------------------------------------------------------------------------
+
+Tools2D.intersectionLineSegmentPolygon = function (theLine, 
+                                                   thePolygon, 
+                                                   theFindAllIntersections)
+{
+   var intersections = [];
+   for (var i1 = 0; i1 < thePolygon.points.length - 1; i1++)
+   {
+      var i2 = (i1 + 1) % thePolygon.points.length;
+      var polyLine = new Tools2D.Line(thePolygon.points[i1], 
+                                      thePolygon.points[i2]);
+      var intersection = intersectionLineSegmentLineSegment(theLine, polyLine);
+      if (itersection != undefined)
+      {
+         intersections.push(intersection);
+         if (theFindAllIntersections == false)
+         {
+               break;
+         }
+      }
+      
+   }
+   return intersections;
 }
 
 // ---------------------------------------------------------------------------

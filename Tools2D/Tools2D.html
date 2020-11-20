@@ -33,6 +33,38 @@ Tools2D.Point.prototype.draw = function(ctx, label)
    }
 }
 
+Tools2D.Polygon.prototype.draw = function(ctx, lastPointOk)
+{
+   if (this.points.length > 1)
+   {
+      ctx.save();
+      ctx.strokeStyle = "#000000";
+      for (var i = 0; i < this.points.length - 1; i++)
+      {
+         this.points[i].draw(ctx, i + 1);
+      }
+      ctx.beginPath()
+      ctx.moveTo(this.points[0].x, this.points[0].y);
+      for (var i = 1; i < this.points.length - 1; i++)
+      {
+         ctx.lineTo(this.points[i].x, this.points[i].y);
+      }
+      ctx.stroke();
+      var lastIndex = this.points.length - 1;
+      if (lastPointOk == false)
+      {
+         ctx.strokeStyle = "#FF0000";
+      }
+      this.points[lastIndex].draw(ctx, lastIndex + 1);
+      ctx.beginPath();
+      ctx.moveTo(this.points[lastIndex - 1].x, this.points[lastIndex - 1].y);
+      ctx.lineTo(this.points[lastIndex].x, this.points[lastIndex].y);
+      ctx.lineTo(this.points[0].x, this.points[0].y);
+      ctx.stroke();
+      ctx.restore();
+   }
+}
+
 Tools2D.Rectangle.prototype.draw = function(ctx)
 {
    this.upperLeft.draw(ctx);
@@ -979,7 +1011,7 @@ TransformationMatrix.mouseUp = function(event)
 
 TransformationMatrix.mouseMove = function(event)
 {
-} ;
+};
 
 TransformationMatrix.keyUp = function (event)
 {
@@ -1028,6 +1060,50 @@ TransformationMatrix.help = function (event)
 {
    return "Move: 'a' = left, 'd' = right, 'w' = up, 's' = down. Rotate: 'q' = ccw, 'e' = cw. Set pivot: left click";
 };
+
+// ----------------------------------------------------------------------------
+
+var PolygonProperties = {};
+
+PolygonProperties.init = function ()
+{
+   this.polygon = new Tools2D.Polygon();
+}
+
+PolygonProperties.draw = function(ctx)
+{
+   this.polygon.draw(ctx, false);
+   ctx.fillText("Area: " + this.polygon.area(), 10, 10);
+};
+
+PolygonProperties.mouseUp = function(event)
+{
+   this.polygon.addPoint(new Tools2D.Point(event.offsetX, event.offsetY));
+};
+
+PolygonProperties.mouseMove = function(event)
+{
+   this.polygon.removePoint()
+   this.polygon.addPoint(new Tools2D.Point(event.offsetX, event.offsetY));
+};
+
+PolygonProperties.keyUp = function (event)
+{
+   if (event.key == "Backspace")
+   {
+      this.polygon.removePoint();
+   }
+   else
+   if (event.key == "Escape")
+   {
+      this.polygon.clear();
+   }
+}
+
+PolygonProperties.help = function (event)
+{
+   return "Set points. 'Backspace' = delete last point, 'Escape' = delete all points";
+}
 
 // ----------------------------------------------------------------------------
 
@@ -1120,6 +1196,7 @@ function clearAllChoices()
    highlightElement(document.getElementById("IntersectionLineSegmentRectangle"), false);
    highlightElement(document.getElementById("PointInTriangle"), false);
    highlightElement(document.getElementById("TransformationMatrix"), false);
+   highlightElement(document.getElementById("PolygonProperties"), false);
 }
 
 function useDistancePointCircle()
@@ -1185,6 +1262,14 @@ function useTransformationMatrix()
    document.getElementById("help").innerHTML = behaviour.help();
 }
 
+function usePolygonProperties()
+{
+   clearAllChoices();
+   highlightElement(document.getElementById("PolygonProperties"), true);
+   behaviour = PolygonProperties;
+   behaviour.init();
+   document.getElementById("help").innerHTML = behaviour.help();
+}
 
 </script>
 </head>
@@ -1197,6 +1282,7 @@ function useTransformationMatrix()
 <p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px;">Intersection Line Segment &harr; Rectangle</p>
 <p id="PointInTriangle" onclick="usePointInTriangle()" style="width: 640px;">Point in Triangle</p>
 <p id="TransformationMatrix" onclick="useTransformationMatrix()" style="width: 640px;">Transformation Matrix</p>
+<p id="PolygonProperties" onclick="usePolygonProperties()" style="width: 640px;">Polygon Properties</p>
 
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
         onmousedown="mouseDown(event)" 
