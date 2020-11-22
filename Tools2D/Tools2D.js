@@ -329,8 +329,9 @@ Tools2D.intersectionLineSegmentPolygon = function (theLine,
       var i2 = (i1 + 1) % thePolygon.points.length;
       var polyLine = new Tools2D.Line(thePolygon.points[i1], 
                                       thePolygon.points[i2]);
-      var intersection = intersectionLineSegmentLineSegment(theLine, polyLine);
-      if (itersection != undefined)
+      var intersection = Tools2D.intersectionLineSegmentLineSegment(theLine, 
+                                                                    polyLine);
+      if (intersection != undefined)
       {
          intersections.push(intersection);
          if (theFindAllIntersections == false)

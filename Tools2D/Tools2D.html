@@ -33,38 +33,6 @@ Tools2D.Point.prototype.draw = function(ctx, label)
    }
 }
 
-Tools2D.Polygon.prototype.draw = function(ctx, lastPointOk)
-{
-   if (this.points.length > 1)
-   {
-      ctx.save();
-      ctx.strokeStyle = "#000000";
-      for (var i = 0; i < this.points.length - 1; i++)
-      {
-         this.points[i].draw(ctx, i + 1);
-      }
-      ctx.beginPath()
-      ctx.moveTo(this.points[0].x, this.points[0].y);
-      for (var i = 1; i < this.points.length - 1; i++)
-      {
-         ctx.lineTo(this.points[i].x, this.points[i].y);
-      }
-      ctx.stroke();
-      var lastIndex = this.points.length - 1;
-      if (lastPointOk == false)
-      {
-         ctx.strokeStyle = "#FF0000";
-      }
-      this.points[lastIndex].draw(ctx, lastIndex + 1);
-      ctx.beginPath();
-      ctx.moveTo(this.points[lastIndex - 1].x, this.points[lastIndex - 1].y);
-      ctx.lineTo(this.points[lastIndex].x, this.points[lastIndex].y);
-      ctx.lineTo(this.points[0].x, this.points[0].y);
-      ctx.stroke();
-      ctx.restore();
-   }
-}
-
 Tools2D.Rectangle.prototype.draw = function(ctx)
 {
    this.upperLeft.draw(ctx);
@@ -1068,23 +1036,99 @@ var PolygonProperties = {};
 PolygonProperties.init = function ()
 {
    this.polygon = new Tools2D.Polygon();
+   this.nextPoint;
 }
 
 PolygonProperties.draw = function(ctx)
 {
-   this.polygon.draw(ctx, false);
-   ctx.fillText("Area: " + this.polygon.area(), 10, 10);
+   var points = this.polygon.points;
+   if (points.length > 0)
+   {
+      ctx.save();
+      ctx.strokeStyle = "#000000";
+      for (var i = 0; i < points.length; i++)
+      {
+         points[i].draw(ctx, i + 1);
+      }
+      ctx.beginPath()
+      ctx.moveTo(points[0].x, points[0].y);
+      for (var i = 1; i < points.length; i++)
+      {
+         ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+      
+      if (this.pointOk(this.nextPoint) == false)
+      {
+         ctx.strokeStyle = "#FF0000";
+      }
+      else
+      {
+         this.polygon.addPoint(this.nextPoint);
+         var area = this.polygon.area();
+         ctx.fillText("Area:    " + Math.abs(area), 10, 10);
+         ctx.fillText("Winding: " + (area > 0 ? "Clockwise" : "Counter-Clockwise"), 10, 25);
+         this.polygon.removePoint();
+      }
+      var lastIndex = points.length - 1;
+      this.nextPoint.draw(ctx, points.length + 1);
+      ctx.beginPath();
+      ctx.moveTo(points[lastIndex].x, points[lastIndex].y);
+      ctx.lineTo(this.nextPoint.x, this.nextPoint.y);
+      ctx.lineTo(points[0].x, points[0].y);
+      ctx.stroke();
+      ctx.restore();
+   }
 };
+
+PolygonProperties.pointOk = function(point)
+{
+   if (this.polygon.points.length > 2)
+   {
+      var firstPoint = this.polygon.points[0];
+      var line1 = new Tools2D.Line(firstPoint, point);
+      for (var i = 1; i < this.polygon.points.length - 1; i++)
+      {
+         var polyLine = new Tools2D.Line(this.polygon.points[i], this.polygon.points[i + 1]);
+         var intersect = Tools2D.intersectionLineSegmentLineSegment(line1, 
+                                                                    polyLine, 
+                                                                    true);
+         if (intersect != undefined)
+         {
+            return false;
+         }
+      }
+                 
+      var lastPoint = this.polygon.points[this.polygon.points.length - 1];
+      var line2 = new Tools2D.Line(point, lastPoint);
+      for (var i = 0; i < this.polygon.points.length - 2; i++)
+      {
+         var polyLine = new Tools2D.Line(this.polygon.points[i], this.polygon.points[i + 1]);
+         var intersect = Tools2D.intersectionLineSegmentLineSegment(line2, 
+                                                                    polyLine, 
+                                                                    true);
+         if (intersect != undefined)
+         {
+            return false;
+         }
+      }
+   }
+   return true;
+}
 
 PolygonProperties.mouseUp = function(event)
 {
-   this.polygon.addPoint(new Tools2D.Point(event.offsetX, event.offsetY));
+   var point = new Tools2D.Point(event.offsetX, event.offsetY);
+   if (this.pointOk(point))
+   {
+      this.polygon.addPoint(point);
+   }      
+   this.nextPoint = point;
 };
 
 PolygonProperties.mouseMove = function(event)
 {
-   this.polygon.removePoint()
-   this.polygon.addPoint(new Tools2D.Point(event.offsetX, event.offsetY));
+   this.nextPoint = new Tools2D.Point(event.offsetX, event.offsetY);
 };
 
 PolygonProperties.keyUp = function (event)
@@ -1275,16 +1319,16 @@ function usePolygonProperties()
 </head>
 
 <body>
-<p id="DistancePointLineSegment" onclick="useDistancePointLineSegment()" style="width: 640px;">Distance Point &harr; Line Segment</p>
-<p id="DistancePointPoint" onclick="useDistancePointPoint()" style="width: 640px;">Distance Point &harr; Point</p>
-<p id="DistancePointCircle" onclick="useDistancePointCircle()" style="width: 640px;">Distance Point &harr; Circle</p>
-<p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px;">Intersection Line Segment &harr; Line Segment</p>
-<p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px;">Intersection Line Segment &harr; Rectangle</p>
-<p id="PointInTriangle" onclick="usePointInTriangle()" style="width: 640px;">Point in Triangle</p>
+<p id="DistancePointLineSegment" onclick="useDistancePointLineSegment()" style="width: 640px; cursor: pointer">Distance Point &harr; Line Segment</p>
+<p id="DistancePointPoint" onclick="useDistancePointPoint()" style="width: 640px; cursor: pointer">Distance Point &harr; Point</p>
+<p id="DistancePointCircle" onclick="useDistancePointCircle()" style="width: 640px; cursor: pointer">Distance Point &harr; Circle</p>
+<p id="IntersectionLineSegmentLineSegment" onclick="useIntersectionLineSegmentLineSegment()" style="width: 640px; cursor: pointer">Intersection Line Segment &harr; Line Segment</p>
+<p id="IntersectionLineSegmentRectangle" onclick="useIntersectionLineSegmentRectangle()" style="width: 640px; cursor: pointer">Intersection Line Segment &harr; Rectangle</p>
+<p id="PointInTriangle" onclick="usePointInTriangle()" style="width: 640px; cursor: pointer">Point in Triangle</p>
 <p id="TransformationMatrix" onclick="useTransformationMatrix()" style="width: 640px;">Transformation Matrix</p>
-<p id="PolygonProperties" onclick="usePolygonProperties()" style="width: 640px;">Polygon Properties</p>
+<p id="PolygonProperties" onclick="usePolygonProperties()" style="width: 640px; cursor: pointer">Polygon Properties</p>
 
-<canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000;" 
+<canvas id="myCanvas" width="640" height="480" style="border:1px solid #000000; cursor: crosshair" 
         onmousedown="mouseDown(event)" 
         onmouseup="mouseUp(event)" 
         onmousemove="mouseMove(event)"
