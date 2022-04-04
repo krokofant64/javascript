@@ -245,7 +245,7 @@ K16Assembler.prototype.getCurrentCharCode = function ()
 
 // ----------------------------------------------------------------------------
 
-K16Assembler.prototype.findLabel = function (theLabel, theMask)
+K16Assembler.prototype.findLabel = function (theLabel, theMask, theHiLoOffset)
 {
    if (theLabel in this.labelMap)
    {
@@ -254,9 +254,10 @@ K16Assembler.prototype.findLabel = function (theLabel, theMask)
       if (label.isDefined == false)
       {
          // Label found, but not yet defined - add entry to fixup table
-         var fixupPos = { mask:    theMask, 
-                          address: this.currentAddress, 
-                          line:    this.line 
+         var fixupPos = { mask:       theMask, 
+                          hiLoOffset: theHiLoOffset,
+                          address:    this.currentAddress, 
+                          line:       this.line 
                         };
 
          label.fixupPos.push(fixupPos);
@@ -270,7 +271,21 @@ K16Assembler.prototype.findLabel = function (theLabel, theMask)
          {
             return undefined;
          }
-         return offset;
+         switch (theHiLoOffset)
+         {
+            case "H":
+            {
+               return (offset >> 8) & 0x00FF;
+            }
+            case "L":
+            {
+               return offset & 0x00FF;
+            }
+            default:
+            {
+               return offset;
+            }
+         }
       }
    }
    else
@@ -282,9 +297,10 @@ K16Assembler.prototype.findLabel = function (theLabel, theMask)
                     fixupPos:  []                    
                   };
 
-      var fixupPos = { mask:    theMask, 
-                       address: this.currentAddress, 
-                       line:    this.line 
+      var fixupPos = { mask:       theMask, 
+                       hiLoOffset: theHiLoOffset,
+                       address:    this.currentAddress, 
+                       line:       this.line 
                      };
       label.fixupPos.push(fixupPos);
       this.labelMap[theLabel] = label;
@@ -404,13 +420,18 @@ K16Assembler.prototype.parse = function (theAssemblyCode)
       if (label.isDefined == false)
       {
          this.errorMessage = "Label \"" + label.name + "\" is undefined in line ";
-         for (var fixup in label.fixupPos.size())
+         var firstLine = true;
+         for (var fixup in label.fixupPos)
          {
-            if (this.errorMessage != "")
+            if (firstLine == true)
+            {
+               firstLine = false;
+            }
+            else
             {
                this.errorMessage += ", ";
             }
-            this.errorMessage += fixup.line;
+            this.errorMessage += label.fixupPos[fixup].line;
          }
          this.errorMessage += ".";
          return false;
@@ -432,7 +453,7 @@ K16Assembler.prototype.parseAddress = function (theOffsetMask)
       var identifier = this.parseIdentifier();
       if (identifier != undefined)
       {
-         result.offset = this.findLabel(identifier, theOffsetMask);
+         result.offset = this.findLabel(identifier, theOffsetMask, "Offset");
          if (result.offset != undefined)
          {
             result.register = PcRegC;
@@ -621,6 +642,24 @@ K16Assembler.prototype.parseBinNumber = function (theNumber)
 
 // ----------------------------------------------------------------------------
 
+K16Assembler.prototype.parseConstant = function ()
+{
+   if (this.getCurrentChar() == "$")
+   {
+      var identifier = this.getCurrentChar();
+      this.nextChar(); // Eat first character   
+      while (isalnum(this.getCurrentChar()) || this.getCurrentChar() == '_')
+      {
+         identifier += this.getCurrentChar();
+         this.nextChar(); // Eat character
+      }
+      return identifier;
+   }
+   return undefined;
+};
+
+// ----------------------------------------------------------------------------
+
 K16Assembler.prototype.parseDecimalNumber = function (theNumber)
 {
    while (isdigit(this.getCurrentChar()))
@@ -683,7 +722,7 @@ K16Assembler.prototype.parseDirective = function (theStartOfLine)
    else
    if (directive == "define")
    {
-      var name = this.parseIdentifier();
+      var name = this.parseConstant();
       if (name == undefined)
       {
          this.errorMessage = "Identifier expected.";
@@ -984,9 +1023,9 @@ K16Assembler.prototype.parseExpressionPrimary = function ()
       return expression;
    }
    else
-   if (isalpha(this.getCurrentChar()))
+   if (this.getCurrentChar() == "$")
    {
-      var identifier = this.parseIdentifier();
+      var identifier = this.parseConstant();
       this.skipSpaces();
       if (identifier in this.constants)
       {
@@ -1503,16 +1542,52 @@ K16Assembler.prototype.parseReg3Imm8 = function (theCode)
    if (r3 != undefined)
    {
       this.skipSpaces();
-      var number = this.parseExpression();
-      if (number != undefined)
+      if (isalpha(this.getCurrentChar()))
       {
-         if (number < 256)
+         // Imm8 is a label
+         var label = this.parseIdentifier();
+         this.skipSpaces();
+         if (this.getCurrentChar() != ".")
          {
-            if (this.isEndOfLine() == true)
+            this.errorMessage = "\".L\" or \".H\" expected.";
+            return undefined;
+         }
+         this.nextChar();
+         this.skipSpaces();
+         var number;
+         if (this.getCurrentChar() == "L" ||
+             this.getCurrentChar() == "H")
+         {
+            number = this.findLabel(label, 0x00FF, this.getCurrentChar());
+            this.nextChar();         
+         }
+         else
+         {
+            this.errorMessage = "\".L\" or \".H\" expected.";
+            return undefined;
+         }
+                  
+         if (this.isEndOfLine() == true)
+         {
+            theCode = this.encodeRegister3(theCode, r3);
+            theCode = this.encodeImm8(theCode, number);
+            return theCode;
+         }
+      }
+      else
+      {
+         // Imm8 is an expression
+         var number = this.parseExpression();
+         if (number != undefined)
+         {
+            if (number < 256)
             {
-               theCode = this.encodeRegister3(theCode, r3);
-               theCode = this.encodeImm8(theCode, number);
-               return theCode;
+               if (this.isEndOfLine() == true)
+               {
+                  theCode = this.encodeRegister3(theCode, r3);
+                  theCode = this.encodeImm8(theCode, number);
+                  return theCode;
+               }
             }
          }
       }
@@ -1662,12 +1737,26 @@ K16Assembler.prototype.storeLabel = function (theLabel)
       {
          var address = label.fixupPos[i].address;
          var mask = label.fixupPos[i].mask;
-         var offset = this.offsetFromLabel(label, address, mask);
-         if (offset == undefined)
+         if (label.fixupPos[i].hiLoOffset == "Offset")
          {
-            return false;
+            var offset = this.offsetFromLabel(label, address, mask);
+            if (offset == undefined)
+            {
+               return false;
+            }
+            this.code[address] = (this.code[address] & ~mask) | (offset & mask);
          }
-         this.code[address] = (this.code[address] & ~mask) | (offset & mask);
+         else
+         if (label.fixupPos[i].hiLoOffset == "H")
+         {
+            this.code[address] = (this.code[address] & ~mask) | ((label.address >> 8) & mask);
+         }
+         else
+         if (label.fixupPos[i].hiLoOffset == "L")
+         {
+            this.code[address] = (this.code[address] & ~mask) | (label.address & mask);
+         }
+            
       }
       label.fixupPos = [];
    }

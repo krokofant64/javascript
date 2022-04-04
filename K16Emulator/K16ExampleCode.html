@@ -76,18 +76,18 @@ Divisor:  .data 13
 <p><button onclick="copyCode('divide')">Copy code</button></p>
 <h4>Display the value of three registers:</h4>
 <textarea class="code" id="displayreg" rows="10" cols="80" readonly>
-.define IoCntrLo  0xFFFD
-.define IoCntrHi  0xFFFE
-.define FrameBuf  0x8000 
+.define $IoCntrLo  0xFFFD
+.define $IoCntrHi  0xFFFE
+.define $FrameBuf  0x8000 
                LDHZ R4 0x00
 Start:         LDHZ SP 0x01 
-               LDH R3 IoCntrLo.H
-               LDL R3 IoCntrLo.L
+               LDH R3 $IoCntrLo.H
+               LDL R3 $IoCntrLo.L
                LD  R2 [R3]
                LDLZ R0 1
                LDLZ R1 4
                JSR DisplayReg
-               LDL R3 IoCntrHi.L
+               LDL R3 $IoCntrHi.L
                LD R2 [R3]
                LDLZ R0 1
                LDLZ R1 5
@@ -133,7 +133,7 @@ DisplayReg:    PSH R3
 ; [in]   R1 = row
 ; [out]  R5 = position 
 GetCursorPos:  PSH R3
-               LDHZ R5 FrameBuf.H
+               LDHZ R5 $FrameBuf.H
                LD R3  R1 ; Multiply row by 40 
                SHL R3 R3
                SHL R3 R3
