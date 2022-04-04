@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="K16Assembler.js"></script>
+<script type="text/javascript" src="K16Cpu.js"></script>
+<script type="text/javascript" src="K16Io.js"></script>
+<script type="text/javascript" src="K16Memory.js"></script>
+<script type="text/javascript" src="K16Video.js"></script>
+<style>
+body {font-family: Arial;}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 10px;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.code {
+   font-size: 12px;
+   box-sizing: border-box;
+   border: 2px solid #ccc;
+   border-radius: 4px;
+   background-color: #f8f8f8; 
+   font-family: "Lucida Console", "Courier New", monospace;
+   line-height: 150%;
+}
+table {
+  table-layout:fixed;
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+td, th {
+  border: 1px solid #111111;
+  text-align: left;
+  padding: 8px;
+}
+
+td.instruction {
+   font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+</style>
+</head>
+<body>
+<h2>K16 CPU</h2>
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'Emulator')">Emulator</button>
+  <button class="tablinks" onclick="openTab(event, 'Assembler')">Assembler</button>
+  <button class="tablinks" onclick="openTab(event, 'Help')">Help</button>
+  <button class="tablinks" onclick="openTab(event, 'Examples')">Examples</button>
+</div>
+
+<div id="Emulator" class="tabcontent">
+<p>
+  <canvas id="screen" width="739" height="600">
+    Your browser does not support the canvas element.
+  </canvas>
+</p>
+<p>
+  <canvas style="background-image: url('./K16FrontPanel.png')" id="panel" width="739" height="419">
+  Your browser does not support the canvas element.
+  </canvas>
+</p>
+</div>
+
+<div id="Assembler" class="tabcontent">
+  <p>Source code:</p>
+  
+  <textarea class="code" id="assemblyCode" cols="80" rows="20"></textarea>
+  <p><button type="button" onclick="assemble()">Translate</button>
+     <button type="button" onclick="upload()">Upload</button>
+     <button type="button" onclick="verilog()">Verilog</button>
+  </p>
+  <p>Machine code:</p>
+  <textarea readonly class="code" id="generatedCode" cols="80" rows="20"></textarea>
+</div>
+
+
+<div id="Help" class="tabcontent">
+  <div w3-include-html="./K16InstructionSet.html"></div>
+</div>
+
+<div id="Examples" class="tabcontent">
+  <div w3-include-html="./K16ExampleCode.html"></div>
+</div>
+
+<script>
+function includeHTML() {
+  var z, i, elmnt, file, xhttp;
+  /*loop through a collection of all HTML elements:*/
+  z = document.getElementsByTagName("*");
+  for (i = 0; i < z.length; i++) {
+    elmnt = z[i];
+    /*search for elements with a certain atrribute:*/
+    file = elmnt.getAttribute("w3-include-html");
+    if (file) {
+      /*make an HTTP request using the attribute value as the file name:*/
+      xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4) {
+          if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+          if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+          /*remove the attribute, and call this function once more:*/
+          elmnt.removeAttribute("w3-include-html");
+          includeHTML();
+        }
+      }      
+      xhttp.open("GET", file, true);
+      xhttp.send();
+      /*exit the function:*/
+      return;
+    }
+  }
+};
+
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+function copyCode(theId) {
+  /* Get the text field */
+  var copyText = document.getElementById(theId);
+  
+  document.getElementById("assemblyCode").value = copyText.value;
+
+  /* Select the text field */
+//  copyText.select();
+//  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+
+  /* Copy the text inside the text field */
+//  navigator.clipboard.writeText(copyText.value);
+}
+</script>
+<script>
+
+var ioModule = new K16Io();
+var screen = new K16Video();
+var memory = new K16Memory(screen.frameBuffer, ioModule);
+var cpu = new K16Cpu(memory);
+
+includeHTML();
+
+// ----------------------------------------------------------------------------
+
+function mouseDown(event)
+{
+   ioModule.setSwitches();
+}
+
+// ----------------------------------------------------------------------------
+
+function assemble()
+{
+   var assemblyCode = document.getElementById("assemblyCode").value;
+   
+   var assembler = new K16Assembler();
+   
+   if (assembler.parse(assemblyCode) == false)
+   {
+      document.getElementById("generatedCode").value = 
+         "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      return undefined
+   }
+   else
+   {
+      var output = "";
+      for (var i = 1; i < assembler.sourceCode.length; i++)
+      {
+         var line = assembler.sourceCode[i];
+         if (line.address != undefined)
+         {
+            output += line.address.toString(16).padStart(4, "0") + " ";
+            output += assembler.code[line.address].toString(16).padStart(4, "0") + " ";
+            output += line.sourceCode;
+            for (var j = 1; j < line.length; j++)
+            {
+               output += (line.address + j).toString(16).padStart(4, "0") + " ";
+               output += assembler.code[line.address + j].toString(16).padStart(4, "0") + "\n";         
+            }
+         }
+         else
+         {
+            output += "          " + line.sourceCode;
+         }
+      }
+      document.getElementById("generatedCode").value = output;
+      return assembler;
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function upload()
+{
+   var assembler = assemble();
+   if (assembler != undefined)
+   {
+      for (var address in assembler.code)
+      {
+         memory.setAddress(address);
+         memory.write(assembler.code[address]);
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function verilog()
+{
+   var assemblyCode = document.getElementById("assemblyCode").value;
+   
+   var assembler = new K16Assembler();
+   
+   if (assembler.parse(assemblyCode) == false)
+   {
+      document.getElementById("generatedCode").value = 
+         "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      return undefined
+   }
+   else
+   {
+      var output = "";
+      for (var i = 1; i < assembler.sourceCode.length; i++)
+      {
+         var line = assembler.sourceCode[i];
+         if (line.address != undefined)
+         {
+            output += "mem[" + line.address + "] = 16'h";
+            output += assembler.code[line.address].toString(16).padStart(4, "0") + "; // ";
+            output += line.sourceCode;
+            for (var j = 1; j < line.length; j++)
+            {
+               output += "mem[" + (line.address + j) + "] = 16'h";
+               output += assembler.code[line.address + j].toString(16).padStart(4, "0") + ";\n";         
+            }
+         }
+         else
+         {
+            output += "                   // " + line.sourceCode;
+         }
+      }
+      document.getElementById("generatedCode").value = output;
+      return assembler;
+   }
+}
+
+var panelCanvas = document.getElementById("panel");
+var panelCtx = panelCanvas.getContext("2d");
+
+var screenCanvas = document.getElementById("screen");
+var screenCtx = screenCanvas.getContext("2d");
+
+panelCanvas.addEventListener("mousedown", mouseDown, false);
+
+ioModule.draw();
+
+window.requestAnimationFrame(mainLoop);
+
+var previousTime;
+
+
+
+
+function mainLoop(theTimestamp)
+{
+   if (previousTime)
+   {
+      var deltaTime = theTimestamp - previousTime;
+      if (deltaTime > 200)
+      {
+         deltaTime = 200;
+      }
+      
+      ioModule.checkCtrlSwitches(theTimestamp);
+      
+      for (var i = 0; i < deltaTime * 1000; i++)
+      {
+         ioModule.clockTick();
+         
+         if (ioModule.resetPushed())
+         {
+            cpu.reset();
+         }
+         if (ioModule.stopPushed())
+         {
+            cpu.stop();
+         }
+         cpu.clockTick();
+      }
+   }
+   previousTime = theTimestamp;
+
+   ioModule.running = cpu.runningM;
+   ioModule.draw();   
+   screen.draw(screenCtx, 49, 60);
+   window.requestAnimationFrame(mainLoop);
+}
+
+
+</script>
+
+
+<script>
+</script>
+   
+</body>
+</html> 
