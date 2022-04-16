@@ -1,52 +1,35 @@
 <html>
 <head>
-<style>
-table {
-  table-layout:fixed;
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-td, th {
-  border: 1px solid #111111;
-  text-align: left;
-  padding: 8px;
-}
-
-td.instruction {
-   font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-</style>
-
+<link rel="stylesheet" href="K16.css">
 </head>
 <body>
-<table>
+
+<h2 id="InstructionSet">Instruction Set</h2>
+<div class="body">
+The table below shows the K16 instruction set.
+The table contains for each instruction the name, the description, the changed flags, and the encoding.
+<table style="margin-top:5mm; margin-bottom:5mm">
   <thead>
     <tr>
-      <th style="width: 80x; color:white; background-color:black">Instruction</th>
-      <th style="width: 330px; color:white; background-color:black">Description</th>
-      <th style="width: 50; color:white; background-color:black">Flags</th>
-      <th style="text-align:center; width:18px; background-color:red">15</th>
-      <th style="text-align:center; width:18px; background-color:red">14</th>
-      <th style="text-align:center; width:18px; background-color:red">13</th>
-      <th style="text-align:center; width:18px; background-color:red">12</th>
-      <th style="text-align:center; width:18px; background-color:yellow">11</th>
-      <th style="text-align:center; width:18px; background-color:yellow">10</th>
-      <th style="text-align:center; width:18px; background-color:yellow">9</th>
-      <th style="text-align:center; width:18px; background-color:yellow">8</th>
-      <th style="text-align:center; width:18px; background-color:red">7</th>
-      <th style="text-align:center; width:18px; background-color:red">6</th>
-      <th style="text-align:center; width:18px; background-color:red">5</th>
-      <th style="text-align:center; width:18px; background-color:red">4</th>
-      <th style="text-align:center; width:18px; background-color:yellow">3</th>
-      <th style="text-align:center; width:18px; background-color:yellow">2</th>
-      <th style="text-align:center; width:18px; background-color:yellow">1</th>
-      <th style="text-align:center; width:18px; background-color:yellow">0</th>
+      <th class="instruction">Instruction</th>
+      <th class="description">Description</th>
+      <th class="flags">Flags</th>
+      <th class="redBit">15</th>
+      <th class="redBit">14</th>
+      <th class="redBit">13</th>
+      <th class="redBit">12</th>
+      <th class="yellowBit">11</th>
+      <th class="yellowBit">10</th>
+      <th class="yellowBit">9</th>
+      <th class="yellowBit">8</th>
+      <th class="redBit">7</th>
+      <th class="redBit">6</th>
+      <th class="redBit">5</th>
+      <th class="redBit">4</th>
+      <th class="yellowBit">3</th>
+      <th class="yellowBit">2</th>
+      <th class="yellowBit">1</th>
+      <th class="yellowBit">0</th>
     </tr>
   </thead>
   <tbody>
@@ -310,6 +293,27 @@ tr:nth-child(even) {
       <td style="text-align:center">1</td>
    </tr>
    <tr>
+      <td class="instruction">HLT</td>
+      <td>Halt the CPU</td>
+      <td></td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">0</td>
+      <td style="text-align:center">0</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+      <td style="text-align:center">1</td>
+   </tr>
+   <tr>
       <td class="instruction">INC</td>
       <td>Reg<sub>Dest</sub> = Reg<sub>Src</sub> + 1</td>
       <td>N,Z</td>
@@ -490,7 +494,7 @@ tr:nth-child(even) {
    </tr>
    <tr>
       <td class="instruction">POP</td>
-      <td>Pop Reg<sub>Src</sub> from stack</td>
+      <td>Pop Reg<sub>Dst</sub> from stack</td>
       <td>N,Z</td>
       <td style="text-align:center">0</td>
       <td style="text-align:center">0</td>
@@ -695,7 +699,7 @@ tr:nth-child(even) {
    </tr>  
    <tr>
       <td class="instruction">STO [mem]</td>
-      <td>Store Reg<sub>Src<sub> in memory at Reg<sub>Base</sub> + Offset7</td>
+      <td>Store Reg<sub>Src</sub> in memory at Reg<sub>Base</sub> + Offset7</td>
       <td></td>
       <td style="text-align:center">1</td>
       <td style="text-align:center">1</td>
@@ -753,7 +757,152 @@ tr:nth-child(even) {
 	   <td style="text-align:center">0</td>
    </tr>
    </tbody>
-<table>
+</table>
+</div>
+<h2 id="AssemblerInstructionFormats">Assembler Instruction Formats</h2>
+
+<h3>Three-register Instructions</h3> 
+<div class="body">
+The three-register instructions <b>ADC</b>, <b>ADD</b>, <b>AND</b>, <b>OR</b>, <b>SBC</b>, <b>SUB</b>, and <b>XOR</b> have  the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <i>Reg<sub>Src1</sub></i> <i>Reg<sub>Src2</sub></i></pre>
+</div>
+<h3>Two-register Instructions</h3>
+<div class="body">
+The two-register instructions <b>ASHL</b>, <b>ASHR</b>, <b>DEC</b>, <b>INC</b>, <b>LD</b>, <b>LDH</b>, <b>LDL</b>, <b>NOT</b>, <b>ROL</b>, <b>ROR</b>, <b>SHL</b>, <b>SHR</b>, and <b>SWP</b> have the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <i>Reg<sub>Src</sub></i></pre>
+The two-register instruction <b>CMP</b> has the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Src1</sub></i> <i>Reg<sub>Src2</sub></i></pre>
+</div>
+<h3>One-register Instructions</h3> 
+<div class="body">
+The <b>POP</b> instruction has the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <b>POP</b> <i>Reg<sub>Dest</sub></i></pre> 
+The <b>PSH</b> instruction has the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <b>PSH</b> <i>Reg<sub>Src</sub></i></pre> 
+</div>
+<h3>Immediate Instructions</h3>
+<div class="body">
+The immediate instructions <b>LDH</b> imm8, <b>LDHZ</b> imm8, <b>LDL</b> imm8, <b>LDLZ</b> imm8 have the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <i>expression</i></pre>
+The least significant 8 bits of <i>expression</i> are used as immediate operand.
+</div>
+<h3>Load from Memory Instruction</h3>
+<div class="body">
+The load from memory instruction <b>LD</b> [mem] has the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <b>[</b></i>Reg<sub>Base</sub></i> <b>+</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <b>[</b></i>Reg<sub>Base</sub></i> <b>-</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <b>[</b></i>Reg<sub>Base</sub></i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Dest</sub></i> <i>Label</i></pre>
+Examples:
+<pre class="code">
+.define $MyOffset 5
+Start:     LD R2 [R3]             ; R2 = Mem[R3]
+           LD R2 [R3 + 15]        ; R2 = Mem[R3 + 15]
+           LD R5 [R3 - $MyOffset] ; R5 = Mem[R3 - 5]
+           LD R2 Operator1        ; R2 = Mem[address of "Operator1"]
+Operator1: .data 1200</pre>
+</div>
+<h3>Store in Memory Instruction</h3>
+<div class="body">
+The store in memory instruction <b>STO</b> [mem] has the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Src</sub></i> <b>[</b></i>Reg<sub>Base</sub></i> <b>+</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Src</sub></i> <b>[</b></i>Reg<sub>Base</sub></i> <b>-</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Src</sub></i> <b>[</b></i>Reg<sub>Base</sub></i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Reg<sub>Src</sub></i> <i>Label</i></pre>
+</div>
+<h3>Branch and Jump Instructions</h3>
+<div class="body">
+The branch and jump instructions <b>BCC</b>, <b>BCS</b>, <b>BNC</b>, <b>BNS</b>, <b>BOC</b>, <b>BOS</b>, <b>BZC</b>, <b>BZS</b>, <b>JMP</b>, and <b>JSR</b> have the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <b>[</b></i>Reg<sub>Base</sub></i> <b>+</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <b>[</b></i>Reg<sub>Base</sub></i> <b>-</b> <i>expression</i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <b>[</b></i>Reg<sub>Base</sub></i><b>]</b>
+<i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i> <i>Label</i></pre> 
+</div>
+<h3>No-argument Instructions</h3>
+<div class="body">
+The no-argument instructions <b>CLC</b>, <b>CLI</b>, <b>HLT</b>, <b>RET</b>, <b>RTI</b>, <b>SEC</b>, and <b>SEI</b> have the following syntax:
+<pre class ="syntax"><i>Label</i><b>:</b><sub>(opt)</sub> <i>Instruction</i></pre>
+</div>
+<h2 id="Registers">Registers</h2>
+<div class="body">
+The K16 CPU has 8 registers:
+<p>
+<b>R0</b> .. <b>R5</b> are general purpose registers
+</p>
+<p>
+<b>R6</b> or <b>SP</b> is the stack pointer
+</p>
+<p>
+<b>R7</b> or <b>PC</b> is the program counter
+</p>
+</div>
+<h2 id="AssemblerExpressions">Assembler Expressions</h2>
+<div class="body">
+</div>
+<h2 id="AssemblerDirectives">Assembler Directives</h2>
+<div class="body">
+The K16 assembler supports a few assembler directives.
+</div>
+<h3>.data</h3>
+<div class="body">
+Includes raw data in the output.
+The directive is often used in conjunction with a label.
+<p>Syntax:
+<pre class ="syntax"><b>.data</b> <i>expression<sub>1</sub></i> [ <b>,</b> <i>expression<sub>2</sub></i> <b>,</b> ... <b>,</b> <i>expression<sub>n</sub></i>]</pre>
+</p>
+<p>
+Examples:
+<pre class="code">
+Operand1:      .data 500
+ScreenAddress: .data 0x8000
+ShiftTable:    .data 1 << 1, 1 << 2, 1 << 3
+               .data 40 * 30
+</pre>
+</p>
+</div>
+<h3>.define</h3>
+<div class="body">
+Defines a numeric constant.
+Constant names must start with a dollar sign ("$").
+<p>Syntax: 
+<pre class ="syntax"><b>.define</b> <i>constant_name</i> <i>expression</i></pre>
+</p>
+<p>
+Examples:
+<pre class="code">
+.define $Black     0x0000
+.define $BgBlack   ($Black << 3) 
+</pre>
+</p>
+</div>
+<h3>.org</h3>
+<div class="body">
+Set the start address of the generated code.
+<p>Syntax: 
+<pre class ="syntax"><b>.org</b> <i>expression</i></pre>
+</p>
+<p>
+Example:
+<pre class="code">
+.org 0x0100
+LDL R4 0x50 
+</pre>
+</div>
+<h3>.string</h3>
+<div class="body">
+Converts a string to machine words and includes it in the output.
+If the string has an odd length then the least significant byte of the last maschine word is set to zero.
+The directive is often used in conjunction with a label.
+<p>Syntax: 
+<pre class ="syntax"><b>.string</b> "<i>character<sub>1</sub></i>...<i>character<sub>n</sub></i>"</pre>
+</p>
+<p>
+Example:
+<pre class="code">
+Greeting: .string "Hello world"
+</pre>
+</p>
+</div>
 </body>
 </html>
 

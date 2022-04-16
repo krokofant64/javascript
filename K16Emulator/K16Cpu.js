@@ -49,7 +49,7 @@ K16Cpu.prototype.clockTick = function ()
          {
             this.addressRegM = this.regM[PcRegC];
             this.memoryApiM.setAddress(this.addressRegM);
-            this.regM[PcRegC]++;
+            this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF;
             this.stateM = "DecodeInstrE";
          }
          else
@@ -310,7 +310,7 @@ K16Cpu.prototype.decodeBranchInstruction = function ()
          // Negative offset - copy sign to most significant bits
          offset |= 0xFF80;
       }
-      this.regM[PcRegC] = address + offset;
+      this.regM[PcRegC] = (address + offset) & 0xFFFF;
    }
    this.stateM = "FetchInstrE";
 };
@@ -438,7 +438,7 @@ K16Cpu.prototype.decodeJmpInstruction = function ()
       // Negative offset - copy sign to most significant bits
       offset |= 0xFC00;
    }
-   this.regM[PcRegC] = address + offset;
+   this.regM[PcRegC] = (address + offset) & 0xFFFF;
    this.stateM = "FetchInstrE";
 };
 
@@ -568,7 +568,7 @@ K16Cpu.prototype.decodeShiftInstruction = function ()
       case 0x0004: // ROL
       {
          var nextCarry = (src & 0x8000 ? 1 : 0); 
-         if (flagsM.carry == 0)
+         if (this.flagsM.carry == 0)
          {
             result = (src << 1) & 0xFFFE;
          }
@@ -667,7 +667,7 @@ K16Cpu.prototype.handleCtrlPanelStates = function ()
                   this.runningM = 1;
                   this.addressRegM = this.regM[PcRegC];
                   this.memoryApiM.setAddress(this.addressRegM);
-                  this.regM[PcRegC]++;
+                  this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF;
                   this.keyValidM = 0;
                   this.stateM = "DecodeInstrE";
                }
@@ -680,7 +680,7 @@ K16Cpu.prototype.handleCtrlPanelStates = function ()
                   console.log("InstStepC");
                   this.addressRegM = this.regM[PcRegC];
                   this.memoryApiM.setAddress(this.addressRegM);
-                  this.regM[PcRegC]++;
+                  this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF;
                   this.keyValidM = 0;
                   this.stateM = "DecodeInstrE";
                }
@@ -766,7 +766,7 @@ K16Cpu.prototype.handleCtrlPanelStates = function ()
          var dataIn = this.memoryApiM.read();
          this.regM[PcRegC] = dataIn;
          this.memoryApiM.setAddress(dataIn);
-         this.regM[PcRegC]++
+         this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF
          this.stateM = "DecodeInstrE";
          break;
       }
@@ -780,7 +780,7 @@ K16Cpu.prototype.handleCtrlPanelStates = function ()
       }
       case "PanelExamineWaitNextE":
       {
-         this.regM[PcRegC]++;
+         this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF;
          this.memoryApiM.setAddress(this.regM[PcRegC]);
          this.stateM = "PanelWaitDataE";
          break;
@@ -800,7 +800,7 @@ K16Cpu.prototype.handleCtrlPanelStates = function ()
       }
       case "PanelDepositWaitNextE":
       {
-         this.regM[PcRegC]++;
+         this.regM[PcRegC] = (this.regM[PcRegC] + 1) & 0xFFFF;
          this.stateM = "PanelDepositWriteDataE";
          break;
       }
@@ -926,7 +926,7 @@ K16Cpu.prototype.writeReturnAddressReady = function ()
       // Negative offset - copy sign to most significant bits
       offset |= 0xFC00;
    }
-   this.regM[PcRegC] = address + offset;
+   this.regM[PcRegC] = (address + offset) & 0xFFFF;
    this.stateM = "FetchInstrE";   
 }
 
@@ -941,7 +941,7 @@ K16Cpu.prototype.reset = function ()
    this.addressRegM = 0;
    this.instructionM = 0;
    this.flagsM = { carry: 0, zero: 0, negative: 0, overflow: 0 };
-   this.stateM = "StoppedE";
+   this.stateM = "PanelFetchDataE";
    this.tickCountM = 0;
 };
 

@@ -1025,17 +1025,38 @@ K16Assembler.prototype.parseExpressionPrimary = function ()
    else
    if (this.getCurrentChar() == "$")
    {
-      var identifier = this.parseConstant();
+      var constant = this.parseConstant();
       this.skipSpaces();
-      if (identifier in this.constants)
+      if (constant in this.constants)
       {
-         return this.constants[identifier];
+         return this.constants[constant];
       }         
       else
       {
-         this.errorMessage = "Identifier \"" + identifier + "\" is undefined.";
+         this.errorMessage = "Constant \"" + constant + "\" is undefined.";
          return undefined;
       }
+   }
+   else
+   if (this.getCurrentChar() == "'")
+   {
+      this.nextChar(); // Skip '
+      if (!isprint(this.getCurrentChar()))
+      {
+         this.errorMessage = "Printable character expected.";
+         return undefined;
+      }
+      result = this.getCurrentChar().charCodeAt(0);
+      this.nextChar(); // Skip char
+      if (this.getCurrentChar() != "'")
+      {
+         this.errorMessage = "\"'\" expected.";
+         return undefined;
+      }
+      this.nextChar(); // Skip '
+      this.skipSpaces();
+      return result;
+      
    }
    else
    {
@@ -1362,7 +1383,7 @@ K16Assembler.prototype.parseOffset = function (theOffsetMask)
    }
    else
    {
-      return false;
+      return undefined;
    }
    this.nextChar();
    this.skipSpaces();
@@ -1370,7 +1391,7 @@ K16Assembler.prototype.parseOffset = function (theOffsetMask)
    var number = this.parseExpression(number);
    if (number == undefined)
    {
-      return false;
+      return undefined;
    }
    if (isNegative)
    {
@@ -1378,7 +1399,7 @@ K16Assembler.prototype.parseOffset = function (theOffsetMask)
       number = (~number + 1); // two's complement
       if ((number & ~theOffsetMask) != ~theOffsetMask)
       {
-         return false;
+         return undefined;
       }
    }
    else
@@ -1386,7 +1407,7 @@ K16Assembler.prototype.parseOffset = function (theOffsetMask)
       // positve offset
       if ((number & (~theOffsetMask)) != 0)
       {
-         return false;
+         return undefined;
       }
    }
    theOffset = number & theOffsetMask;

@@ -1,63 +1,50 @@
 <html>
 <head>
-<style>
-table {
-  table-layout:fixed;
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-td, th {
-  border: 1px solid #111111;
-  text-align: left;
-  padding: 8px;
-}
-
-td.instruction {
-   font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-.code {
-   font-size: 12px;
-   box-sizing: border-box;
-   border: 2px solid #ccc;
-   border-radius: 4px;
-   background-color: #f8f8f8; 
-   font-family: "Lucida Console", "Courier New", monospace;
-   line-height: 150%;
-}
-</style>
-
+<link rel="stylesheet" href="K16.css">
 </head>
 <body>
-<h4>Multiply two 16 bit numbers:</h4>
+<h4><button onclick="copyCode('multiply')">Copy code</button> Multiply two 16 bit numbers:</h4>
 <textarea class="code" id="multiply" rows="10" cols="80" readonly>
-Start:   LD R0 Op1
-         LD R2 Op2
-         ; R0 * R2 -> R1 R2; temp R3
-         LDLZ R1 0 ;
-         LDLZ R3 16
-         SHR R2 R2
-BitLoop: BCC NoAdd
-         ADD R1 R1 R0
-NoAdd:   SHR R1 R1
-         ROR R2 R2
-         DEC R3 R3
-         BZC BitLoop
-         HLT
-Op1:     .data 500
-Op2:     .data 13
+          LDHZ SP 0x01 ; Set SP to 0x0100
+Start:    LD R0 Op1
+          LD R2 Op2
+          JSR Multiply
+          HLT
+Op1:      .data 500
+Op2:      .data 13
+
+; Multiply  R0 * R2 -> R1 R2
+; [in]     R0 = operand1
+; [out]    R1 = result high
+; [in/out] R2 = operand2/result low
+Multiply: PSH R3
+          LDLZ R1 0 
+          LDLZ R3 16
+          SHR R2 R2
+BitLoop:  BCC NoAdd
+          ADD R1 R1 R0
+NoAdd:    SHR R1 R1
+          ROR R2 R2
+          DEC R3 R3
+          BZC BitLoop
+          POP R3
+          RET
 </textarea>
-<p><button onclick="copyCode('multiply')">Copy code</button></p>
-<h4>Divide two 16 bit numbers:</h4>
+<h4><button onclick="copyCode('divide')">Copy code</button> Divide two 16 bit numbers:</h4>
 <textarea class="code" id="divide" rows="10" cols="80" readonly>
+          LDHZ SP 0x01 ; Set SP to 0x0100
 Start:    LD R1 Divident
           LD R2 Divisor
-          ; Divide R1 by R2. Result in R1. Remainder in R0. Uses R3.
+          JSR Divide
+          HLT
+Divident: .data 100
+Divisor:  .data 13
+
+; Divide R1 by R2 -> result in R1, remainder in R0
+; [out]    R0 = remainder
+; [in/out] R1 = divident/result
+; [in]     R2 = divisor
+Divide:   PSH R3
           LDLZ R0 0
           LDLZ R3 16
           SHL R1 R1
@@ -69,18 +56,41 @@ BitLoop:  ROL R0 R0
 NoSub:    ROL R1 R1
           DEC R3 R3
           BZC BitLoop
-          HLT
-Divident: .data 100
-Divisor:  .data 13
+          POP R3
+          RET
 </textarea>
-<p><button onclick="copyCode('divide')">Copy code</button></p>
-<h4>Display the value of three registers:</h4>
+<h4><button onclick="copyCode('displayreg')">Copy code</button> Display the value of three registers:</h4>
 <textarea class="code" id="displayreg" rows="10" cols="80" readonly>
+.define $AddrSwtch 0xFFF8
+.define $CtrlSwtch 0xFFF9
+.define $AddrLeds  0xFFFA
+.define $DataLeds  0xFFFB
+.define $RegSwtch  0xFFFC
 .define $IoCntrLo  0xFFFD
 .define $IoCntrHi  0xFFFE
+
 .define $FrameBuf  0x8000 
-               LDHZ R4 0x00
-Start:         LDHZ SP 0x01 
+
+.define $Black     0x0000
+.define $Blue      0x0001
+.define $Green     0x0002
+.define $Cyan      0x0003
+.define $Red       0x0004
+.define $Magenta   0x0005
+.define $Yellow    0x0006
+.define $White     0x0007
+
+.define $BgBlack   ($Black << 3)
+.define $BgBlue    ($Blue << 3)
+.define $BgGreen   ($Green << 3)
+.define $BgCyan    ($Cyan << 3)
+.define $BgRed     ($Red << 3)
+.define $BgMagenta ($Magenta << 3)
+.define $BgYellow  ($Yellow << 3)
+.define $BgWhite   ($White << 3)
+
+               LDHZ SP 0x01 ; Set SP to 0x0100
+Start:         LDHZ R4 0x00 
                LDH R3 $IoCntrLo.H
                LDL R3 $IoCntrLo.L
                LD  R2 [R3]
@@ -99,6 +109,7 @@ Start:         LDHZ SP 0x01
                INC R4 R4
                JMP Start
 
+; Display the value of R2 in hexadecimal format at screen column R0, and row R1
 ; [in]   R0 = column
 ; [in]   R1 = row
 ; [in]   R2 = reg
@@ -129,6 +140,7 @@ DisplayReg:    PSH R3
                POP R4
                POP R3
 
+; Get the address of screen column R0, row R1 
 ; [in]   R0 = column
 ; [in]   R1 = row
 ; [out]  R5 = position 
@@ -146,25 +158,145 @@ GetCursorPos:  PSH R3
                POP R3
                RET
 
+; Write hex digit R3 at position R5 to screen
 ; [in]   R5 = pos
 ; [in]   R3 = hex digit
 WriteHexDigit: PSH R4
                LDLZ R4 10
                CMP R3 R4
                BCC NotDecimal
-               LDLZ R4 48 ; '0'
+               LDLZ R4 '0'
                ADD R3 R3 R4
                JMP StoreDigit
-NotDecimal:    LDLZ R4 55 ; 'A' - 10
+NotDecimal:    LDLZ R4 'A' - 10
                ADD R3 R3 R4
-StoreDigit:    LDH R3 0x3C; White background red text
+StoreDigit:    LDH R3 $BgWhite | $Red; White background red text
                STO R3 [R5] 
                INC R5 R5
                POP R4
                RET
 </textarea>
-<p><button onclick="copyCode('displayreg')">Copy code</button></p>
+<h4><button onclick="copyCode('drawPixels')">Copy code</button> Draw some pixels:</h4>
+<textarea class="code" id="drawPixels" rows="10" cols="80" readonly>
 
+.define $AddrSwtch 0xFFF8
+.define $CtrlSwtch 0xFFF9
+.define $AddrLeds  0xFFFA
+.define $DataLeds  0xFFFB
+.define $RegSwtch  0xFFFC
+.define $IoCntrLo  0xFFFD
+.define $IoCntrHi  0xFFFE
+ 
+.define $FrameBuf  0x8000 
+ 
+.define $Black     0x0000
+.define $Blue      0x0001
+.define $Green     0x0002
+.define $Cyan      0x0003
+.define $Red       0x0004
+.define $Magenta   0x0005
+.define $Yellow    0x0006
+.define $White     0x0007
+ 
+.define $BgBlack   ($Black << 3)
+.define $BgBlue    ($Blue << 3)
+.define $BgGreen   ($Green << 3)
+.define $BgCyan    ($Cyan << 3)
+.define $BgRed     ($Red << 3)
+.define $BgMagenta ($Magenta << 3)
+.define $BgYellow  ($Yellow << 3)
+.define $BgWhite   ($White << 3)
+ 
+.define $Mask_x0y0 ~(0x0007)
+.define $Mask_x1y0 ~(0x0007 << 3)
+.define $Mask_x0y1 ~(0x0007 << 6)
+.define $Mask_x1y1 ~(0x0007 << 9)
+ 
+          
+               LDHZ SP 0x01 ; Set SP to 0x0100
+
+               LDLZ R0 0x00
+               LDLZ R1 0x00
+               LDLZ R2 $Green.L
+               JSR DrawPixel;
+               INC R0 R0
+               JSR DrawPixel
+               INC R0 R0
+               JSR DrawPixel
+               INC R1 R1
+               JSR DrawPixel
+               INC R1 R1
+               JSR DrawPixel
+               HLT
+; Draw pixel
+; [in] R0 = x
+; [in] R1 = y
+; [in] R2 = color   
+DrawPixel:     PSH R0
+               PSH R1
+               PSH R2
+               LDLZ R3 0x01
+               AND R4 R1 R3
+               BZC Pixel_y1
+Pixel_y0:      AND R4 R0 R3
+               BZC Pixel_y0x1
+Pixel_y0x0:    LDL R4 $Mask_x0y0.L                   
+               LDH R4 $Mask_x0y0.H
+               JMP StorePixel
+Pixel_y0x1:    SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               LDL R4 $Mask_x1y0.L                   
+               LDH R4 $Mask_x1y0.H 
+               JMP StorePixel        
+Pixel_y1:      SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               AND R4 R0 R2
+               BZC Pixel_y1x1
+Pixel_y1x0:    LDL R4 $Mask_x0y1.L                   
+               LDH R4 $Mask_x0y1.H
+               JMP StorePixel
+Pixel_y1x1:    SHL R2 R2
+               SHL R2 R2
+               SHL R2 R2
+               LDL R4 $Mask_x1y1.L                   
+               LDH R4 $Mask_x1y1.H
+StorePixel:    SHR R0 R0
+               SHR R1 R1
+               JSR GetCursorPos
+               LD R3 [R5]
+               AND R3 R3 R4    
+               OR R3 R3 R2
+               LDHZ R2 0x80
+               OR R3 R3 R2
+               STO R3 [R5]        
+               POP R2
+               POP R1
+               POP R0
+               RET            
+              
+; Calculate cursor position              
+; [in]   R0 = column
+; [in]   R1 = row
+; [out]  R5 = position 
+GetCursorPos:  PSH R3
+               LDHZ R5 $FrameBuf.H
+               LD R3  R1 ; Multiply row by 40 
+               SHL R3 R3
+               SHL R3 R3
+               SHL R3 R3
+               ADD R5 R5 R3
+               SHL R3 R3
+               SHL R3 R3
+               ADD R5 R5 R3
+               ADD R5 R5 R0 ; Add column
+               POP R3
+               RET
+</textarea>
 </body>
 </html>
 

@@ -7,80 +7,13 @@
 <script type="text/javascript" src="K16Io.js"></script>
 <script type="text/javascript" src="K16Memory.js"></script>
 <script type="text/javascript" src="K16Video.js"></script>
-<style>
-body {font-family: Arial;}
 
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
-
-/* Style the buttons inside the tab */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 10px 10px;
-  transition: 0.3s;
-  font-size: 14px;
-}
-
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-
-.code {
-   font-size: 12px;
-   box-sizing: border-box;
-   border: 2px solid #ccc;
-   border-radius: 4px;
-   background-color: #f8f8f8; 
-   font-family: "Lucida Console", "Courier New", monospace;
-   line-height: 150%;
-}
-table {
-  table-layout:fixed;
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-td, th {
-  border: 1px solid #111111;
-  text-align: left;
-  padding: 8px;
-}
-
-td.instruction {
-   font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
-</style>
+<script type="text/javascript" src="edit_area/edit_area_loader.js"></script>
+<link rel="stylesheet" href="K16.css">
 </head>
 <body>
-<h2>K16 CPU</h2>
+<h1>K16 CPU</h1>
+
 <div class="tab">
   <button class="tablinks" onclick="openTab(event, 'Emulator')">Emulator</button>
   <button class="tablinks" onclick="openTab(event, 'Assembler')">Assembler</button>
@@ -104,80 +37,130 @@ tr:nth-child(even) {
 <div id="Assembler" class="tabcontent">
   <p>Source code:</p>
   
-  <textarea class="code" id="assemblyCode" cols="80" rows="20"></textarea>
+  <textarea id="assemblyCode" rows="30" style="width: 98%"></textarea>
   <p><button type="button" onclick="assemble()">Translate</button>
      <button type="button" onclick="upload()">Upload</button>
      <button type="button" onclick="verilog()">Verilog</button>
   </p>
   <p>Machine code:</p>
-  <textarea readonly class="code" id="generatedCode" cols="80" rows="20"></textarea>
+  <textarea readonly class="code" id="generatedCode" rows="20" style="width: 98%"></textarea>
 </div>
 
 
-<div id="Help" class="tabcontent">
-  <div w3-include-html="./K16InstructionSet.html"></div>
-</div>
+<div id="Help" class="tabcontent" w3-include-html="./K16InstructionSet.html"></div>
 
-<div id="Examples" class="tabcontent">
-  <div w3-include-html="./K16ExampleCode.html"></div>
-</div>
+<div id="Examples" class="tabcontent" w3-include-html="./K16ExampleCode.html"></div>
 
 <script>
-function includeHTML() {
-  var z, i, elmnt, file, xhttp;
-  /*loop through a collection of all HTML elements:*/
-  z = document.getElementsByTagName("*");
-  for (i = 0; i < z.length; i++) {
-    elmnt = z[i];
-    /*search for elements with a certain atrribute:*/
-    file = elmnt.getAttribute("w3-include-html");
-    if (file) {
-      /*make an HTTP request using the attribute value as the file name:*/
-      xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4) {
-          if (this.status == 200) {elmnt.innerHTML = this.responseText;}
-          if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
-          /*remove the attribute, and call this function once more:*/
-          elmnt.removeAttribute("w3-include-html");
-          includeHTML();
-        }
-      }      
-      xhttp.open("GET", file, true);
-      xhttp.send();
-      /*exit the function:*/
-      return;
-    }
-  }
+function includeHTML() 
+{
+   var z, i, elmnt, file, xhttp;
+   
+   // Loop through a collection of all HTML elements:
+   z = document.getElementsByTagName("*");
+   for (i = 0; i < z.length; i++)
+   {
+      elmnt = z[i];
+      // Search for elements with a certain atrribute:
+      file = elmnt.getAttribute("w3-include-html");
+      if (file) 
+      {
+         // Make an HTTP request using the attribute value as the file name:
+         xhttp = new XMLHttpRequest();
+         xhttp.onreadystatechange = function() 
+         {
+            if (this.readyState == 4) 
+            {
+               if (this.status == 200) 
+               {
+                  elmnt.innerHTML = this.responseText;
+               }
+               if (this.status == 404)
+               {
+                  elmnt.innerHTML = "Page not found.";
+               }
+               // Remove the attribute, and call this function once more:
+               elmnt.removeAttribute("w3-include-html");
+               includeHTML();
+            }
+         }      
+         xhttp.open("GET", file, true);
+         xhttp.setRequestHeader('Cache-Control', 'no-cache');
+         xhttp.send();
+         // Exit the function:
+         return;
+      }
+   }
 };
 
-function openTab(evt, tabName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.className += " active";
+function openTab(evt, tabName) 
+{
+   var i, tabcontent, tablinks;
+   tabcontent = document.getElementsByClassName("tabcontent");
+   for (i = 0; i < tabcontent.length; i++) 
+   {
+      tabcontent[i].style.display = "none";
+   }
+   tablinks = document.getElementsByClassName("tablinks");
+   for (i = 0; i < tablinks.length; i++) 
+   {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+   }
+   document.getElementById(tabName).style.display = "block";
+   evt.currentTarget.className += " active";
+   if (tabName == "Assembler")
+   {
+      editAreaLoader.init(
+      {
+         id: "assemblyCode",	// id of the textarea to transform		
+         start_highlight: true,	// if start with highlight
+         allow_resize: "both",
+         allow_toggle: false,
+         word_wrap: false,
+         language: "en",
+         syntax: "k16",
+         replace_tab_by_spaces: 3,
+         toolbar: "new_document, load, save, | ,search, go_to_line, |, undo, redo, |, select_font, |, change_smooth_selection, highlight, reset_highlight, |, help",
+         load_callback: "loadCode",
+         save_callback: "saveCode"
+      });
+   }
 }
 
-function copyCode(theId) {
-  /* Get the text field */
-  var copyText = document.getElementById(theId);
-  
-  document.getElementById("assemblyCode").value = copyText.value;
-
-  /* Select the text field */
-//  copyText.select();
-//  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-
-  /* Copy the text inside the text field */
-//  navigator.clipboard.writeText(copyText.value);
+function copyCode(theId) 
+{
+   // Get the text field 
+   var copyText = document.getElementById(theId);
+   editAreaLoader.setValue("assemblyCode", copyText.value);
 }
+
+function loadCode(theEditorWindow)
+{
+   if (typeof(Storage) !== "undefined") 
+   {
+      // Load
+      var code = localStorage.getItem("lastname");
+      editAreaLoader.setValue("assemblyCode", code);
+   } 
+   else 
+   {
+      alert("Sorry, your browser does not support Web Storage...");
+   }
+}
+
+function saveCode(theEditorWindow, theCode)
+{
+   if (typeof(Storage) !== "undefined") 
+   {
+      // Save
+      localStorage.setItem("lastname", theCode);
+   } 
+   else 
+   {
+      alert("Sorry, your browser does not support Web Storage...");
+   }
+}
+
 </script>
 <script>
 
@@ -199,14 +182,15 @@ function mouseDown(event)
 
 function assemble()
 {
-   var assemblyCode = document.getElementById("assemblyCode").value;
+   var assemblyCode = editAreaLoader.getValue("assemblyCode");
    
    var assembler = new K16Assembler();
    
    if (assembler.parse(assemblyCode) == false)
    {
-      document.getElementById("generatedCode").value = 
-         "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      var errorMessage = "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      editAreaLoader.setValue("generatedCode", errorMessage);
+      document.getElementById("generatedCode").value = errorMessage;
       return undefined
    }
    else
@@ -231,6 +215,7 @@ function assemble()
             output += "          " + line.sourceCode;
          }
       }
+      editAreaLoader.setValue("generatedCode", output);
       document.getElementById("generatedCode").value = output;
       return assembler;
    }
@@ -255,14 +240,15 @@ function upload()
 
 function verilog()
 {
-   var assemblyCode = document.getElementById("assemblyCode").value;
+   var assemblyCode = editAreaLoader.getValue("assemblyCode");
    
    var assembler = new K16Assembler();
    
    if (assembler.parse(assemblyCode) == false)
    {
-      document.getElementById("generatedCode").value = 
-         "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      var errorMessage = "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      editAreaLoader.setValue("generatedCode", errorMessage);
+      document.getElementById("generatedCode").value = errorMessage;
       return undefined
    }
    else
@@ -287,6 +273,7 @@ function verilog()
             output += "                   // " + line.sourceCode;
          }
       }
+      editAreaLoader.setValue("generatedCode", output);
       document.getElementById("generatedCode").value = output;
       return assembler;
    }
@@ -306,8 +293,7 @@ window.requestAnimationFrame(mainLoop);
 
 var previousTime;
 
-
-
+document.getElementById("Emulator").style.display = "block";
 
 function mainLoop(theTimestamp)
 {
@@ -329,6 +315,7 @@ function mainLoop(theTimestamp)
          {
             cpu.reset();
          }
+         else
          if (ioModule.stopPushed())
          {
             cpu.stop();

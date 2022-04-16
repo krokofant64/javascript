@@ -1,0 +1,168 @@
+body {
+  counter-reset: h2counter;
+  font-family: arial, sans-serif;
+  font-size: 14px;
+}
+
+h1 {
+  counter-reset: h2counter;
+  font-family: arial, sans-serif;
+  font-size: 14px;
+}
+
+h2 {
+  font-family: arial, sans-serif;
+  font-size: 14px;
+}
+
+h2:before {
+  font-family: arial, sans-serif;
+  font-size: 14px;
+  content: counter(h2counter) "\00a0\00a0";
+  counter-increment: h2counter;
+  counter-reset: h3counter;
+}
+
+h3 {
+  font-family: arial, sans-serif;
+  font-size: 14px;
+}
+
+h3:before {
+  font-family: arial, sans-serif;
+  font-size: 14px;
+  content: counter(h2counter) "." counter(h3counter) "\00a0\00a0";
+  counter-increment: h3counter;
+}
+
+
+table {
+  table-layout:fixed;
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+td{
+  border: 1px solid #111111;
+  text-align: left;
+  padding: 6px;
+}
+
+td.instruction {
+   font-weight: bold;
+}
+
+th {
+  border: 1px solid #111111;
+  text-align: left;
+  padding: 6px;
+}
+
+th.description {
+   width: 250px; 
+   color: white;
+   background-color: black;
+}
+
+th.flags {
+   width: 50px; 
+   color: white; 
+   background-color: black;
+}
+
+th.instruction {
+   width: 80x; 
+   color: white; 
+   background-color: black;
+}
+
+th.redBit {
+  text-align: center; 
+  width: 18px; 
+  background-color: red;
+}
+
+th.yellowBit {
+  text-align: center; 
+  width: 18px; 
+  background-color: yellow;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+  width: 950px
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 10px;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+}
+
+.code {
+   font-size: 14px;
+   box-sizing: border-box;
+   border: 2px solid #ccc;
+   border-radius: 4px;
+   background-color: #f8f8f8; 
+   font-family: "Lucida Console", "Courier New", monospace;
+   line-height: 100%;
+   padding: 7px;
+   width: 910px;
+}
+
+.body {
+   margin-left: 30px; 
+   width: 910px;
+   font-size: 14px;
+   font-family: arial, sans-serif;
+}
+
+.head {
+   position: absolute; left: 70px;
+}
+
+.syntax {
+   font-size: 14px;
+   box-sizing: border-box;
+   border: 2px solid #ccc;
+   border-radius: 4px; 
+   background-color: #f8f8f8; 
+   font-family: arial, sans-serif;
+   line-height: 100%;
+   padding: 8px;
+   width: 910px;
+}
+
+
