@@ -352,6 +352,7 @@ K16Cpu.prototype.decodeHalfwordInstruction = function ()
    var rDest = (this.instructionM >> 10) & 0x007; 
    var rSrc = (this.instructionM >> 7) & 0x007; 
    var src = this.regM[rSrc];
+   var dest = this.regM[rDest];
    var result;
 
    switch (this.instructionM & 0x0003)
@@ -363,12 +364,12 @@ K16Cpu.prototype.decodeHalfwordInstruction = function ()
       }
       case 0x0001: // LDL
       {
-         result = src & 0x00FF;
+         result = (dest & 0xFF00) | (src & 0x00FF);
          break;
       }
       case 0x0002: // LDH
       {
-         result = (src >> 8) & 0x00FF;
+         result = ((src << 8) & 0xFF00) | (dest & 0x00FF); 
          break;
       }
       case 0x0003: // SWP
@@ -429,7 +430,7 @@ K16Cpu.prototype.decodeJmpInstruction = function ()
    if (rAddress == 0x0007 && offset == 0x03FF)
    {
       this.runningM = 0;
-      this.regM[PcRegC]--;
+ //     this.regM[PcRegC]--;
       this.stateM = "PanelFetchDataE";
       return;
    }

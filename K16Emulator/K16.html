@@ -23,7 +23,7 @@
 
 <div id="Emulator" class="tabcontent">
 <p>
-  <canvas id="screen" width="739" height="600">
+  <canvas style="background-image: url('./Screen.png')" id="screen" width="739" height="588">
     Your browser does not support the canvas element.
   </canvas>
 </p>
@@ -36,14 +36,13 @@
 
 <div id="Assembler" class="tabcontent">
   <p>Source code:</p>
-  
-  <textarea id="assemblyCode" rows="30" style="width: 98%"></textarea>
-  <p><button type="button" onclick="assemble()">Translate</button>
-     <button type="button" onclick="upload()">Upload</button>
-     <button type="button" onclick="verilog()">Verilog</button>
+  <textarea id="assemblyCode" rows="30" style="width: 910px"></textarea>
+  <p><button type="button" onclick="assemble()">Generate Code</button>
+     <button type="button" onclick="verilog()">Generate Verilog</button>
+     <button type="button" onclick="upload()">Upload Code</button>
   </p>
-  <p>Machine code:</p>
-  <textarea readonly class="code" id="generatedCode" rows="20" style="width: 98%"></textarea>
+  <p>Generated code:</p>
+  <textarea readonly class="code" id="generatedCode" rows="30" style="width: 910px"></textarea>
 </div>
 
 
@@ -114,6 +113,7 @@ function openTab(evt, tabName)
       {
          id: "assemblyCode",	// id of the textarea to transform		
          start_highlight: true,	// if start with highlight
+         font_size: 12,
          allow_resize: "both",
          allow_toggle: false,
          word_wrap: false,
@@ -327,7 +327,7 @@ function mainLoop(theTimestamp)
 
    ioModule.running = cpu.runningM;
    ioModule.draw();   
-   screen.draw(screenCtx, 49, 60);
+   screen.draw(screenCtx, 48, 48);
    window.requestAnimationFrame(mainLoop);
 }
 

@@ -123,6 +123,124 @@ K16OpcodeTable.prototype.getOpcode = function (theName)
 
 // ----------------------------------------------------------------------------
 
+function K16BinaryOp(theOperator, theLhs, theRhs)
+{
+   this.operator = theOperator;
+   this.lhs = theLhs;
+   this.rhs = theRhs;
+}
+
+// ----------------------------------------------------------------------------
+
+K16BinaryOp.prototype.execute = function ()
+{
+   var lhs = this.lhs.execute();
+   var rhs = this.rhs.execute();
+   switch (this.operator)
+   {
+      case "+":
+      {
+         return lhs + rhs;
+      }
+      case "-":
+      {
+         return lhs - rhs;
+      }
+      case "*":
+      {
+         return lhs * rhs;
+      }
+      case "/":
+      {
+         return lhs / rhs;
+      }
+      case "%":
+      {
+         return lhs % rhs;
+      }
+      case "<<":
+      {
+         return lhs << rhs;
+      }
+      case ">>":
+      {
+         return lhs >> rhs;
+      }
+      case "&":
+      {
+         return lhs & rhs;
+      }
+      case "|":
+      {
+         return lhs | rhs;
+      }
+      case "^":
+      {
+         return lhs ^ rhs;
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function K16UnaryOp(theOperator, theOperand)
+{
+   this.operator = theOperator;
+   this.operand = theOperand;
+}
+
+// ----------------------------------------------------------------------------
+
+K16UnaryOp.prototype.execute = function ()
+{
+   var operand = this.operand.execute();
+   switch (this.operator)
+   {
+      case "+":
+      {
+         return operand;
+      }
+      case "-":
+      {
+         return -operand;
+      }
+      case "~":
+      {
+         return ~operand;
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function K16NumberOp(theNumber)
+{
+   this.number = theNumber;
+}
+
+// ----------------------------------------------------------------------------
+
+K16NumberOp.prototype.execute = function ()
+{
+   return this.number;
+}
+
+// ----------------------------------------------------------------------------
+
+function K16ConstantOp(theConstant)
+{
+   this.constant = theConstant;
+}
+
+// ----------------------------------------------------------------------------
+
+K16ConstantOp.prototype.execute = function ()
+{
+   return this.number;
+}
+
+// ----------------------------------------------------------------------------
+
 function K16Assembler()
 {
    this.constants = {};
@@ -245,39 +363,66 @@ K16Assembler.prototype.getCurrentCharCode = function ()
 
 // ----------------------------------------------------------------------------
 
-K16Assembler.prototype.getOffset = function (theLabel, theMask)
+K16Assembler.prototype.findLabel = function (theLabel, theMask, theHiLoOffset)
 {
    if (theLabel in this.labelMap)
    {
       // Label found
       var label = this.labelMap[theLabel];
-      var offset = this.offsetFromLabel(label, this.currentAddress, theMask);
-      if (offset == undefined)
+      if (label.isDefined == false)
       {
-         return undefined;
+         // Label found, but not yet defined - add entry to fixup table
+         var fixupPos = { mask:       theMask, 
+                          hiLoOffset: theHiLoOffset,
+                          address:    this.currentAddress, 
+                          line:       this.line 
+                        };
+
+         label.fixupPos.push(fixupPos);
+         return 0;
       }
-      return offset;
+      else
+      {
+         // Label found and defined
+         var offset = this.offsetFromLabel(label, this.currentAddress, theMask);
+         if (offset == undefined)
+         {
+            return undefined;
+         }
+         switch (theHiLoOffset)
+         {
+            case "H":
+            {
+               return (offset >> 8) & 0x00FF;
+            }
+            case "L":
+            {
+               return offset & 0x00FF;
+            }
+            default:
+            {
+               return offset;
+            }
+         }
+      }
    }
    else
    {
-      // Label not found
-      return undefined;
-   }
-};
+      // Label not found - new entry
+      var label = { name:      theLabel,  
+                    isDefined: false, 
+                    address:   0x0000,
+                    fixupPos:  []                    
+                  };
 
-// ----------------------------------------------------------------------------
-
-K16Assembler.prototype.findLabel = function (theLabel)
-{
-   if (theLabel in this.labelMap)
-   {
-      // Label found
-      return this.labelMap[theLabel].address;
-   }
-   else
-   {
-      // Label not found
-      return undefined;
+      var fixupPos = { mask:       theMask, 
+                       hiLoOffset: theHiLoOffset,
+                       address:    this.currentAddress, 
+                       line:       this.line 
+                     };
+      label.fixupPos.push(fixupPos);
+      this.labelMap[theLabel] = label;
+      return 0;
    }
 };
 
@@ -374,9 +519,6 @@ K16Assembler.prototype.parse = function (theAssemblyCode)
    {
       this.assemblyCode = theAssemblyCode + "\n";
    }
-
-   // First pass: Check syntax and store labels   
-   this.finalPass = false;
    this.currentAddress = 0;
    this.currentChar = 0;
    this.errorMessage == "";
@@ -390,17 +532,26 @@ K16Assembler.prototype.parse = function (theAssemblyCode)
       }
    }
    
-   // Second pass: Generate final code   
-   this.finalPass = true;
-   this.currentAddress = 0;
-   this.currentChar = 0;
-   this.errorMessage == "";
-   this.line = 1;
-   
-   while (this.getCurrentChar() != undefined)
+   for (var labelName in this.labelMap)
    {
-      if (this.parseLine() == false)
+      var label = this.labelMap[labelName];
+      if (label.isDefined == false)
       {
+         this.errorMessage = "Label \"" + label.name + "\" is undefined in line ";
+         var firstLine = true;
+         for (var fixup in label.fixupPos)
+         {
+            if (firstLine == true)
+            {
+               firstLine = false;
+            }
+            else
+            {
+               this.errorMessage += ", ";
+            }
+            this.errorMessage += label.fixupPos[fixup].line;
+         }
+         this.errorMessage += ".";
          return false;
       }
    }
@@ -420,20 +571,9 @@ K16Assembler.prototype.parseAddress = function (theOffsetMask)
       var identifier = this.parseIdentifier();
       if (identifier != undefined)
       {
-         result.offset = this.getOffset(identifier, theOffsetMask);
+         result.offset = this.findLabel(identifier, theOffsetMask, "Offset");
          if (result.offset != undefined)
          {
-            result.register = PcRegC;
-            return result;
-         }
-         else
-         {
-            if (this.finalPass == true)
-            {
-               this.errorMessage = "Label \"" + identifier + "\" is undefined.";
-               return;
-            }
-            result.offset = 0;
             result.register = PcRegC;
             return result;
          }
@@ -714,19 +854,16 @@ K16Assembler.prototype.parseDirective = function (theStartOfLine)
          return false;
       }
       
+      if (name in this.constants)
+      {
+         this.errorMessage = "Identifier \"" + name + "\" is already defined.";
+         return false;
+      }
+
       if (this.isEndOfLine() == false)
       {
          this.errorMessage = "Comment, or end-of-line expected.";
          return false;
-      }
-
-      if (this.firstPass == true)
-      {
-         if (name in this.constants)
-         {
-            this.errorMessage = "Identifier \"" + name + "\" is already defined.";
-            return false;
-         }
       }
 
       this.constants[name] = number;
@@ -1038,24 +1175,6 @@ K16Assembler.prototype.parseExpressionPrimary = function ()
       this.skipSpaces();
       return result;
       
-   }
-   else
-   if (isalpha(this.getCurrentChar()))
-   {
-      var label = this.parseIdentifier();
-      var result = this.findLabel(label, 0xFFFF);
-      if (result == undefined)
-      {
-         if (this.finalPass == true)
-         {
-            this.errorMessage = "Label \"" + label + "\" is undefined.";
-         }
-         else
-         {
-            result = 0;
-         }         
-      }
-      return result;
    }
    else
    {
@@ -1562,16 +1681,52 @@ K16Assembler.prototype.parseReg3Imm8 = function (theCode)
    if (r3 != undefined)
    {
       this.skipSpaces();
-      var number = this.parseExpression();
-      if (number != undefined)
+      if (isalpha(this.getCurrentChar()))
       {
-         if (number < 256)
+         // Imm8 is a label
+         var label = this.parseIdentifier();
+         this.skipSpaces();
+         if (this.getCurrentChar() != ".")
          {
-            if (this.isEndOfLine() == true)
+            this.errorMessage = "\".L\" or \".H\" expected.";
+            return undefined;
+         }
+         this.nextChar();
+         this.skipSpaces();
+         var number;
+         if (this.getCurrentChar() == "L" ||
+             this.getCurrentChar() == "H")
+         {
+            number = this.findLabel(label, 0x00FF, this.getCurrentChar());
+            this.nextChar();         
+         }
+         else
+         {
+            this.errorMessage = "\".L\" or \".H\" expected.";
+            return undefined;
+         }
+                  
+         if (this.isEndOfLine() == true)
+         {
+            theCode = this.encodeRegister3(theCode, r3);
+            theCode = this.encodeImm8(theCode, number);
+            return theCode;
+         }
+      }
+      else
+      {
+         // Imm8 is an expression
+         var number = this.parseExpression();
+         if (number != undefined)
+         {
+            if (number < 256)
             {
-               theCode = this.encodeRegister3(theCode, r3);
-               theCode = this.encodeImm8(theCode, number);
-               return theCode;
+               if (this.isEndOfLine() == true)
+               {
+                  theCode = this.encodeRegister3(theCode, r3);
+                  theCode = this.encodeImm8(theCode, number);
+                  return theCode;
+               }
             }
          }
       }
@@ -1701,24 +1856,57 @@ K16Assembler.prototype.skipSpaces = function ()
 
 K16Assembler.prototype.storeLabel = function (theLabel)
 {
-   if (this.finalPass == false)
+   if (theLabel in this.labelMap)
    {
-      if (theLabel in this.labelMap)
+      // Existing, but not yet defined label
+      var label = this.labelMap[theLabel];
+      if (label.isDefined == true)
       {
          // Duplicate label
-         this.errorMessage = "Label \"" + theLabel + 
-                             "\" is already defined in line " + 
-                             this.labelMap[theLabel].line+ ".";
+         this.errorMessage = "Label \"" + theLabel + "\" is already defined.";
          return false;
       }
-      else
+
+      // Define the label
+      label.isDefined = true;
+      label.address = this.currentAddress;
+
+      // 
+      for (var i = 0; i < label.fixupPos.length; i++)
       {
-         // New label
-         var label = {};
-         label.line = this.line;
-         label.address = this.currentAddress;
-         this.labelMap[theLabel] = label;
+         var address = label.fixupPos[i].address;
+         var mask = label.fixupPos[i].mask;
+         if (label.fixupPos[i].hiLoOffset == "Offset")
+         {
+            var offset = this.offsetFromLabel(label, address, mask);
+            if (offset == undefined)
+            {
+               return false;
+            }
+            this.code[address] = (this.code[address] & ~mask) | (offset & mask);
+         }
+         else
+         if (label.fixupPos[i].hiLoOffset == "H")
+         {
+            this.code[address] = (this.code[address] & ~mask) | ((label.address >> 8) & mask);
+         }
+         else
+         if (label.fixupPos[i].hiLoOffset == "L")
+         {
+            this.code[address] = (this.code[address] & ~mask) | (label.address & mask);
+         }
+            
       }
+      label.fixupPos = [];
+   }
+   else
+   {
+      // New label
+      var label = {};
+      label.name = theLabel;
+      label.isDefined = true;
+      label.address = this.currentAddress;
+      this.labelMap[theLabel] = label;
    }
    return true;
 }

@@ -4,7 +4,7 @@
 </head>
 <body>
 <h4><button onclick="copyCode('multiply')">Copy code</button> Multiply two 16 bit numbers:</h4>
-<textarea class="code" id="multiply" rows="10" cols="80" readonly>
+<textarea class="code" id="multiply" rows="20" style="width: 910px" readonly>
           LDHZ SP 0x01 ; Set SP to 0x0100
 Start:    LD R0 Op1
           LD R2 Op2
@@ -31,7 +31,7 @@ NoAdd:    SHR R1 R1
           RET
 </textarea>
 <h4><button onclick="copyCode('divide')">Copy code</button> Divide two 16 bit numbers:</h4>
-<textarea class="code" id="divide" rows="10" cols="80" readonly>
+<textarea class="code" id="divide" rows="20" style="width: 910px" readonly>
           LDHZ SP 0x01 ; Set SP to 0x0100
 Start:    LD R1 Divident
           LD R2 Divisor
@@ -60,7 +60,7 @@ NoSub:    ROL R1 R1
           RET
 </textarea>
 <h4><button onclick="copyCode('displayreg')">Copy code</button> Display the value of three registers:</h4>
-<textarea class="code" id="displayreg" rows="10" cols="80" readonly>
+<textarea class="code" id="displayreg" rows="20" style="width: 910px" readonly>
 .define $AddrSwtch 0xFFF8
 .define $CtrlSwtch 0xFFF9
 .define $AddrLeds  0xFFFA
@@ -118,27 +118,32 @@ DisplayReg:    PSH R3
                PSH R5
                JSR GetCursorPos
                LDLZ R4 0x0F
-               LDH R3 R2
-               SHR R3 R3
-               SHR R3 R3
-               SHR R3 R3
-               SHR R3 R3
-               JSR WriteHexDigit
-               LDH R3 R2
-               AND R3 R3 R4
-               JSR WriteHexDigit
+               SWP R2 R2
                LDL R3 R2
                SHR R3 R3
                SHR R3 R3
                SHR R3 R3
                SHR R3 R3
+               AND R3 R3 R4
+              JSR WriteHexDigit
+               LDL R3 R2
+               AND R3 R3 R4
                JSR WriteHexDigit
+               SWP R2 R2
+               LDL R3 R2
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               AND R3 R3 R4
+              JSR WriteHexDigit
                LDL R3 R2
                AND R3 R3 R4
                JSR WriteHexDigit
                POP R5
                POP R4
                POP R3
+               RET
 
 ; Get the address of screen column R0, row R1 
 ; [in]   R0 = column
@@ -177,7 +182,7 @@ StoreDigit:    LDH R3 $BgWhite | $Red; White background red text
                RET
 </textarea>
 <h4><button onclick="copyCode('drawPixels')">Copy code</button> Draw some pixels:</h4>
-<textarea class="code" id="drawPixels" rows="10" cols="80" readonly>
+<textarea class="code" id="drawPixels" rows="20" style="width: 910px" readonly>
 
 .define $AddrSwtch 0xFFF8
 .define $CtrlSwtch 0xFFF9
@@ -295,6 +300,258 @@ GetCursorPos:  PSH R3
                ADD R5 R5 R3
                ADD R5 R5 R0 ; Add column
                POP R3
+               RET
+</textarea>
+<h4><button onclick="copyCode('clearScreen')">Copy code</button> Clear Screen:</h4>
+<textarea class="code" id="clearScreen" rows="20" style="width: 910px" readonly>
+
+.define $FrameBuf  0x8000 
+ 
+.define $Black     0x0000
+.define $Blue      0x0001
+.define $Green     0x0002
+.define $Cyan      0x0003
+.define $Red       0x0004
+.define $Magenta   0x0005
+.define $Yellow    0x0006
+.define $White     0x0007
+ 
+.define $BgBlack   ($Black << 3)
+.define $BgBlue    ($Blue << 3)
+.define $BgGreen   ($Green << 3)
+.define $BgCyan    ($Cyan << 3)
+.define $BgRed     ($Red << 3)
+.define $BgMagenta ($Magenta << 3)
+.define $BgYellow  ($Yellow << 3)
+.define $BgWhite   ($White << 3)
+         
+               LDHZ SP 0x01 ; Set SP to 0x0100
+               LDLZ R0 ' '
+               LDLZ R1 $BgCyan | $Magenta
+               JSR FillScreen
+               HLT
+               
+; Fill screeen
+; [in] R0 = character
+; [in] R1 = color           
+FillScreen:    PSH R2
+               PSH R3
+               PSH R4
+               LDL R2 R0 ; combine character and color
+               LDH R2 R1
+               LDHZ R3 $FrameBuf.H ; Start address
+               LDL R4 (30 * 40).L  ; end address + 1
+               LDH R4 (30 * 40).H
+               ADD R4 R4 R3
+CharacterLoop: STO R2 [R3]
+               INC R3 R3
+               CMP R3 R4
+               BZC CharacterLoop               
+               POP R4
+               POP R3
+               POP R2
+               RET
+</textarea>
+<h4><button onclick="copyCode('calculator')">Copy code</button> Calculator:</h4>
+<textarea class="code" id="calculator" rows="20" style="width: 910px" readonly>
+.define $FrameBuf  0x8000 
+.define $AddrSwtch 0xFFF8
+.define $CtrlSwtch 0xFFF9
+.define $AddrLeds  0xFFFA
+.define $DataLeds  0xFFFB
+.define $RegSwtch  0xFFFC
+
+.define $Black     0x0000
+.define $Blue      0x0001
+.define $Green     0x0002
+.define $Cyan      0x0003
+.define $Red       0x0004
+.define $Magenta   0x0005
+.define $Yellow    0x0006
+.define $White     0x0007
+ 
+.define $BgBlack   ($Black << 3)
+.define $BgBlue    ($Blue << 3)
+.define $BgGreen   ($Green << 3)
+.define $BgCyan    ($Cyan << 3)
+.define $BgRed     ($Red << 3)
+.define $BgMagenta ($Magenta << 3)
+.define $BgYellow  ($Yellow << 3)
+.define $BgWhite   ($White << 3)
+
+               JMP Start
+
+Op1String: .string "Op1: "
+Op2String: .string "Op2: "
+ResString: .string "Res: "
+Op1:       .data 0
+Op2:       .data 0
+         
+Start:         LDHZ SP 0x01 ; Set SP to 0x0100
+               LDLZ R0 ' '
+               LDLZ R1 $BgCyan | $Magenta
+               JSR FillScreen
+               LDLZ R0 0x01; column 1
+               LDLZ R1 0x01; row 1
+               LDLZ R2 Op1String.L
+               JSR DisplayString
+               HLT
+               LDL R3 $AddrSwtch.L
+               LDH R3 $AddrSwtch.H
+               LD R2 [R3]
+               STO R2 Op1
+               LDLZ R0 0x06; column 1
+               LDLZ R1 0x01; row 1               
+               JSR DisplayReg
+               LDLZ R0 0x01; column 1
+               LDLZ R1 0x02; row 1
+               LDLZ R2 Op2String.L
+               JSR DisplayString
+               HLT
+               LDL R3 $AddrSwtch.L
+               LDH R3 $AddrSwtch.H
+               LD R2 [R3]
+               STO R2 Op2
+               LDLZ R0 0x06; column 1
+               LDLZ R1 0x02; row 1               
+               JSR DisplayReg
+               LDLZ R0 0x01; column 1
+               LDLZ R1 0x03; row 1
+               LDLZ R2 ResString.L
+               JSR DisplayString
+               LD R2 Op1
+               LD R3 Op2
+               ADD R2 R2 R3
+               LDLZ R0 0x06; column 1
+               LDLZ R1 0x03; row 1               
+               JSR DisplayReg
+               HLT
+               JMP Start
+; Fill screeen
+; [in] R0 = character
+; [in] R1 = color           
+FillScreen:    PSH R2
+               PSH R3
+               PSH R4
+               LDL R2 R0 ; combine character and color
+               LDH R2 R1
+               LDHZ R3 $FrameBuf.H ; Start address
+               LDL R4 (30 * 40).L  ; end address + 1
+               LDH R4 (30 * 40).H
+               ADD R4 R4 R3
+CharacterLoop: STO R2 [R3]
+               INC R3 R3
+               CMP R3 R4
+               BZC CharacterLoop               
+               POP R4
+               POP R3
+               POP R2
+               RET
+               
+; Display the value of R2 in hexadecimal format at screen column R0, and row R1
+; [in]   R0 = column
+; [in]   R1 = row
+; [in]   R2 = reg
+DisplayReg:    PSH R3
+               PSH R4
+               PSH R5
+               JSR GetCursorPos
+               LDLZ R4 0x0F
+               SWP R2 R2
+               LDL R3 R2
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               AND R3 R3 R4
+               JSR WriteHexDigit
+               LDL R3 R2
+               AND R3 R3 R4
+               JSR WriteHexDigit
+               SWP R2 R2
+               LDL R3 R2
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               SHR R3 R3
+               AND R3 R3 R4
+               JSR WriteHexDigit
+               LDL R3 R2
+               AND R3 R3 R4
+               JSR WriteHexDigit
+               POP R5
+               POP R4
+               POP R3
+               RET
+
+; Write string at position R5 to screen
+; [in]   R0 = column
+; [in]   R1 = row
+; [in]   R2 = address of string
+DisplayString:     PSH R1
+                   PSH R2
+                   PSH R3
+                   PSH R4
+                   PSH R5
+                   JSR GetCursorPos
+                   LDH R4 0x00
+                   LDH R1 $BgWhite | $Red; White background red text
+DisplayStringLoop: LD  R3 [R2]
+                   SWP R3 R3
+                   LDL R4 R3 
+                   BZS DisplayStringDone
+                   LDL R1 R4
+                   STO R1 [R5]
+                   INC R5 R5
+                   SWP R3 R3
+                   LDL R4 R3 
+                   BZS DisplayStringDone
+                   LDL R1 R4
+                   STO R1 [R5]
+                   INC R5 R5
+                   INC R2 R2;
+                   JMP DisplayStringLoop
+DisplayStringDone: POP R5
+                   POP R4
+                   POP R3
+                   POP R2
+                   POP R1
+                   RET
+
+; Get the address of screen column R0, row R1 
+; [in]   R0 = column
+; [in]   R1 = row
+; [out]  R5 = position 
+GetCursorPos:  PSH R3
+               LDHZ R5 $FrameBuf.H
+               LD R3  R1 ; Multiply row by 40 
+               SHL R3 R3
+               SHL R3 R3
+               SHL R3 R3
+               ADD R5 R5 R3
+               SHL R3 R3
+               SHL R3 R3
+               ADD R5 R5 R3
+               ADD R5 R5 R0 ; Add column
+               POP R3
+               RET
+
+; Write hex digit R3 at position R5 to screen
+; [in]   R5 = pos
+; [in]   R3 = hex digit
+WriteHexDigit: PSH R4
+               LDLZ R4 10
+               CMP R3 R4
+               BCC NotDecimal
+               LDLZ R4 '0'
+               ADD R3 R3 R4
+               JMP StoreDigit
+NotDecimal:    LDLZ R4 'A' - 10
+               ADD R3 R3 R4
+StoreDigit:    LDH R3 $BgWhite | $Red; White background red text
+               STO R3 [R5] 
+               INC R5 R5
+               POP R4
                RET
 </textarea>
 </body>

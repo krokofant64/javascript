@@ -4,6 +4,12 @@ body {
   font-size: 14px;
 }
 
+dt {
+   padding-top: 6px;
+   padding-bottom: 6px;
+   font-weight: bold;
+}
+
 h1 {
   counter-reset: h2counter;
   font-family: arial, sans-serif;
@@ -35,12 +41,16 @@ h3:before {
   counter-increment: h3counter;
 }
 
+img.sketch {
+   margin: 8px;
+}
 
 table {
   table-layout:fixed;
   font-family: arial, sans-serif;
   border-collapse: collapse;
   font-size: 14px;
+  margin: 8px;
 }
 
 td{
@@ -131,12 +141,12 @@ tr:nth-child(even) {
 }
 
 .code {
-   font-size: 14px;
+   font-size: 12px;
    box-sizing: border-box;
    border: 2px solid #ccc;
    border-radius: 4px;
    background-color: #f8f8f8; 
-   font-family: "Lucida Console", "Courier New", monospace;
+   font-family: monospace;
    line-height: 100%;
    padding: 7px;
    width: 910px;

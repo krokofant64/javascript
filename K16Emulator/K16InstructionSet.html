@@ -4,6 +4,38 @@
 </head>
 <body>
 
+<h2 id="ControlPanel">Control Panel</h2>
+<div class="body">
+The control panel is used to control the K16 CPU.
+<img class="sketch" src="FrontPanelHelp.png" alt="Front panel help">
+<p>The address LEDs always display the current value of the program counter.</p>
+<p>The data LEDs displayed various values depending on which CPU function is active at the moment.</p>
+<p>The sixteen data switches below the LEDs provided input to the CPU for various functions</p>
+<p>The status LED is red when the CPU is stopped or halted and green when the CPU is running.</p>
+<p>The control switches are used to control the CPU:</p>
+<dl>
+<dt>DEPOSIT/EXAMINE</dt>
+<dd>Pressing DEPOSIT writes the value contained in the data switches to a register.<br>
+Pressing EXAMINE fetches the value in a register, and displays its value in the data LEDs.<br>
+The register selection knob is used to select the register.</dd>
+<dt>RESET/STOP</dt>
+<dd>Pressing STOP causes the CPU to halt after completing the current instruction.<br>
+Pressing RESET causes the CPU to halt immediately, and clear all CPU internal registers.</dd>
+<dt>START/CONTINUE</dt>
+<dd>Pressing CONTINUE causes the CPU to resume executing at the instruction currently pointed at by the program counter.<br> 
+Pressing START transfers the value currently set in data switches to the program counter and then starts execution of the program from there.</dd>
+<dt>DEPOSIT/DEPOSIT NEXT</dt>
+<dd>Pressing DEPOSIT writes the value contained in the data switches to the memory location pointed at by the program counter.<br>
+Pressing DEPOSIT NEXT first increments the program counter and then deposits to the pointed-to memory location.</dd>
+<dt>EXAMINE/EXAMINE NEXT<dt>
+<dd>Pressing EXAMINE transfers the value set in data switches to the program counter, fetches the value in the corresponding memory location, and displays its value in the data LEDs.<br>
+Pressing EXAMINE NEXT increments the program counter and then performed an examine operation on that memory location, allowing the user to step through a series of memory locations.</dd>
+<dt>INST STEP</dt>
+<dd>The INST STEP switch causes the CPU to execute one instruction, at the current program counter location, and then halts.<br> 
+The program counter is incremented as part of the instruction execution.<br> 
+This allows the user to single-step through a program.</dd>
+</dl>
+</div>
 <h2 id="InstructionSet">Instruction Set</h2>
 <div class="body">
 The table below shows the K16 instruction set.
@@ -380,7 +412,7 @@ The table contains for each instruction the name, the description, the changed f
    </tr>
    <tr>
       <td class="instruction">LDH</td>
-      <td>Reg<sub>Dest</sub>.low = Reg<sub>Src</sub>.high, Reg<sub>Dest</sub>.high = 0</td>
+      <td>Reg<sub>Dest</sub>.high = Reg<sub>Src</sub>.high</td>
       <td>N,Z</td>
       <td style="text-align:center">0</td>
       <td style="text-align:center">0</td>
@@ -397,7 +429,7 @@ The table contains for each instruction the name, the description, the changed f
    </tr>
    <tr>
       <td class="instruction">LDH imm8</td>
-      <td>Reg<sub>Dest</sub>.low = Immediate8</td>
+      <td>Reg<sub>Dest</sub>.high = Immediate8</td>
       <td>N,Z</td>
       <td style="text-align:center">0</td>
       <td style="text-align:center">1</td>
@@ -421,7 +453,7 @@ The table contains for each instruction the name, the description, the changed f
    </tr>
    <tr>
       <td class="instruction">LDL</td>
-      <td>Reg<sub>Dest</sub>.low = Reg<sub>Src</sub>.low, Reg<sub>Dest</sub>.high = 0</td>
+      <td>Reg<sub>Dest</sub>.low = Reg<sub>Src</sub>.low</td>
       <td>N,Z</td>
       <td style="text-align:center">0</td>
       <td style="text-align:center">1</td>
@@ -837,7 +869,42 @@ The K16 CPU has 8 registers:
 </p>
 </div>
 <h2 id="AssemblerExpressions">Assembler Expressions</h2>
+<h3>Numeric Literals</h3>
 <div class="body">
+Numberic literals can be expressed in decimal, hexadecimal, octal, or character format:
+<ul>
+<li>Decimal literals consist of digits '0' .. '9' <u>without</u> a leading zero</li>
+<li>Hexadecimal literals consist of the prefix '0x' followed by hexadecimal digits '0' .. '9' , 'a' .. 'f', and 'A' ..'F'</li>
+<li>Decimal literals consist of digits '0' .. '7' <u>with</u> a leading zero</li>
+<li>Character literals consist of a single ASCII character within quotation marks</li>
+</ul>
+</div>
+<h3>Numeric Constants</h3>
+<div class="body">
+Numeric constants are defined with the assembler directive '.define' (see below).
+They consist of a '$' sign followed by letters and digits.</b>
+Labels can also be used as numeric constants.
+</div>
+<h3>Operators</h3>
+<div class="body">
+The table below, shows, which operators can be used:
+<table>
+<tr><th>Precedence</th><th>Operator</th><th>Description</th><th>Associativity</th></tr>
+<tr><td>1</td><td>.H</td><td>Bit 15 .. 8</td><td>Left-to-right</td></tr>
+<tr><td>1</td><td>.L</td><td>Bit 7 .. 0</td><td>Left-to-right</td></tr>
+<tr><td>2</td><td>+</td><td>Unary plus</td><td>Right-to-left</td></tr>
+<tr><td>2</td><td>-</td><td>Unary minus</td><td>Right-to-left</td></tr>
+<tr><td>2</td><td>~</td><td>Bitwise not</td><td>Right-to-left</td></tr>
+<tr><td>3</td><td>*</td><td>Multiplication</td><td>Left-to-right</td></tr>
+<tr><td>3</td><td>/</td><td>Division</td><td>Left-to-right</td></tr>
+<tr><td>3</td><td>%</td><td>Remainder</td><td>Left-to-right</td></tr>
+<tr><td>4</td><td>+</td><td>Addition</td><td>Left-to-right</td></tr>
+<tr><td>4</td><td>-</td><td>Remainder</td><td>Left-to-right</td></tr>
+<tr><td>5</td><td>&lt;&lt;</td><td>Shift left</td><td>Left-to-right</td></tr>
+<tr><td>5</td><td>&gt;&gt;</td><td>Shift right</td><td>Left-to-right</td></tr>
+<tr><td>6</td><td>&amp;</td><td>Bitwise and</td><td>Left-to-right</td></tr>
+<tr><td>7</td><td>^</td><td>Bitwise xor</td><td>Left-to-right</td></tr>
+<tr><td>8</td><td>|</td><td>Bitwise or</td><td>Left-to-right</td></tr></table>
 </div>
 <h2 id="AssemblerDirectives">Assembler Directives</h2>
 <div class="body">
@@ -902,6 +969,53 @@ Example:
 Greeting: .string "Hello world"
 </pre>
 </p>
+</div>
+<h2 id="Video">Video Frame Buffer</h2>
+<div class="body">
+<p>The video frame buffer starts at address 0x8000 (constant "$FrameBuf" in example code) and has 40 columns and 30 rows:</p>
+<img class="sketch" src="VideoFrameBuffer.png" alt="Video frame buffer">
+<p>Each frame buffer location can either contain a character or four pixels.</p>
+<p>If the most significant bit is clear then the frame buffer contains an ASCII-7 character with a forground color and a background color:</p>
+<img class="sketch" src="VideoCharacter.png" alt="Video character format">
+<p>If the most significant bit is set then the frame buffer contains the color indexes of four pixels:</p>
+<img class="sketch" src="VideoPixels.png" alt="Video pixel format">
+<p>The table below shows the color indexes and the constant names for foreground and background colors:</p>
+<img class="sketch" src="VideoColors.png" alt="Video color indexes and constants">
+<p>The table below shows the character set:</p>
+<img class="sketch" src="CharacterSet.png" alt="Character set">
+</div>
+<h2 id="Io">Input/output</h2>
+<div class="body">
+Most of the LEDs and switches of the control panel can be accessed from the program.
+The table below shows the addresses of the LEDs, switches, and some counters:
+<table>
+<tr><th>Address</th><th>Constant</th><th>Read/write</th><th>Description</th></tr>
+<tr><td>0xFFF8</td><td>$AddrSwtch</td><td>Read</td><td>Address switches</td></tr>
+<tr><td>0xFFF9</td><td>|CtrlSwtch</td><td>Read</td><td>Control switch:<br>0 = none<br>
+1 = START<br>
+2 = CONTINUE<br>
+3 = INST STEP<br>
+4 = EXAMINE<br>
+5 = EXAMINE NEXT<br>
+6 = EXAMINE register<br>
+7 = DEPOSIT<br>
+8 = DEPOSIT NEXT<br>
+9 = DEPOSIT register
+</td></tr>
+<tr><td>0xFFFA</td><td>$AddrLeds</td><td>Write</td><td>Address LEDs</td></tr>
+<tr><td>0xFFFB</td><td>$DataLeds</td><td>Write</td><td>Data LEDs</td></tr>
+<tr><td>0xFFFC</td><td>$RegSwtch</td><td>Read</td><td>Register selection knob:<br>
+0 = R0<br>
+1 = R1<br>
+2 = R2<br>
+3 = R3<br>
+4 = R4<br>
+5 = R5<br>
+6 = SP<br>
+7 = PC</td></tr>
+<tr><td>0xFFFD</td><td>$IoCntrLo</td><td>Read</td><td>Low 16 bit of cycel counter</td></tr>
+<tr><td>0xFFFE</td><td>$IoCntrHi</td><td>Read</td><td>High 16 bit of cycel counter</td></tr>
+</table>
 </div>
 </body>
 </html>

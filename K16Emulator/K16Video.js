@@ -228,7 +228,7 @@ K16Video.prototype.draw4Pixels = function (theImageData, theCharAndAttr, theScre
 
 K16Video.prototype.drawCharacter = function (theImageData, theCharAndAttr, theScreenIndex)
 {
-   var charPixels =  this.charRom[theCharAndAttr & 0xFF];
+   var charPixels =  this.charRom[theCharAndAttr & 0x7F];
    var foreground = (theCharAndAttr >> 8) & 0x07;
    var background = (theCharAndAttr >> 11) & 0x07;
    
@@ -250,7 +250,7 @@ K16Video.prototype.drawCharacter = function (theImageData, theCharAndAttr, theSc
 
 K16Video.prototype.draw = function (theCtx, theOffsetX, theOffsetY)
 {
-   var radius = 20;
+/*   var radius = 20;
    theCtx.beginPath();
    theCtx.arc(theOffsetX, theOffsetY, radius, 1 * Math.PI, 1.5 * Math.PI);
    theCtx.lineTo(theOffsetX + 640, theOffsetY - radius);
@@ -261,7 +261,7 @@ K16Video.prototype.draw = function (theCtx, theOffsetX, theOffsetY)
    theCtx.arc(theOffsetX, theOffsetY + 480, radius, 0.5 * Math.PI, 1 * Math.PI);
    theCtx.lineTo(theOffsetX - radius, theOffsetY);
    theCtx.fill();
-
+*/
    var data = theCtx.getImageData(theOffsetX, theOffsetY, 640, 480);
    for (var charIndex = 0; charIndex < 40 * 30; charIndex++)
    {
