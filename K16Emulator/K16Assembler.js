@@ -245,6 +245,21 @@ K16Assembler.prototype.getCurrentCharCode = function ()
 
 // ----------------------------------------------------------------------------
 
+K16Assembler.prototype.getSourceAtAddress = function (theAddress)
+{
+   for (var i = 0; i < this.sourceCode.length; i++)
+   {
+      var source = this.sourceCode[i];
+      if (source && source.address == theAddress)
+      {
+         return this.sourceCode[i].sourceCode;
+      }
+   }
+   return undefined;
+}
+
+// ----------------------------------------------------------------------------
+
 K16Assembler.prototype.getOffset = function (theLabel, theMask)
 {
    if (theLabel in this.labelMap)
@@ -626,6 +641,12 @@ K16Assembler.prototype.parseConstant = function ()
    {
       var identifier = this.getCurrentChar();
       this.nextChar(); // Eat first character   
+      if (this.getCurrentChar() == "$")
+      {
+         identifier += this.getCurrentChar();
+         this.nextChar(); // Eat character
+         return identifier;
+      }
       while (isalnum(this.getCurrentChar()) || this.getCurrentChar() == '_')
       {
          identifier += this.getCurrentChar();
@@ -701,7 +722,7 @@ K16Assembler.prototype.parseDirective = function (theStartOfLine)
    if (directive == "define")
    {
       var name = this.parseConstant();
-      if (name == undefined)
+      if (name == undefined || name == "$$")
       {
          this.errorMessage = "Identifier expected.";
          return false;
@@ -902,8 +923,14 @@ K16Assembler.prototype.parseExpressionMember = function ()
          return lhs  & 0xFF;
       }
       else
+      if (this.getCurrentChar() == "O")
       {
-         this.errorMessage = "'.H' or '.L' expected";
+         this.skipCharAndSpaces(); // Eat 'O'
+         return lhs  - (this.currentAddress + 1);
+      }
+      else
+      {
+         this.errorMessage = "'.H', '.L', or '.O' expected";
          return undefined;
       }
    }
@@ -997,7 +1024,7 @@ K16Assembler.prototype.parseExpressionPrimary = function ()
       }
       if (this.getCurrentChar() != ")")
       {
-         this.errorMessage = "')' expected.";
+         this.errorMessage = "')' expected. Found '" + this.getCurrentChar() +"'.";
          return undefined;
       }
       this.skipCharAndSpaces(); // Eat ')'
@@ -1012,6 +1039,11 @@ K16Assembler.prototype.parseExpressionPrimary = function ()
       {
          return this.constants[constant];
       }         
+      else
+      if (constant == "$$")
+      {
+         return this.currentAddress;
+      }
       else
       {
          this.errorMessage = "Constant \"" + constant + "\" is undefined.";
@@ -1387,7 +1419,7 @@ K16Assembler.prototype.parseOffset = function (theOffsetMask)
    this.nextChar();
    this.skipSpaces();
 
-   var number = this.parseExpression(number);
+   var number = this.parseExpression();
    if (number == undefined)
    {
       return undefined;

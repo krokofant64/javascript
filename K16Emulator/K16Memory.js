@@ -100,6 +100,34 @@ function K16Memory(theFrameBuffer, theIoModule)
 
 // ----------------------------------------------------------------------------
 
+K16Memory.prototype.inspect = function (theAddress)
+{
+   if ((theAddress & 0xFC00) == 0x0000)
+   {
+      // RAM 
+      var address = theAddress & 0x03FF;
+      return this.memoryM[address];
+   }
+   
+   if ((theAddress & 0xF800) == 0x8000)
+   {
+      // frame buffer
+      var address = theAddress & 0x07FF;
+      return this.frameBufferM[address];
+   }
+   
+   if ((theAddress & 0xFFF8) == 0xFFF8)
+   {
+      // IO 
+      var address = theAddress & 0x0007;
+      return this.ioModuleM.read(address);
+   }
+   
+   return 0xBAD1;
+};
+
+// ----------------------------------------------------------------------------
+
 K16Memory.prototype.setAddress = function (theAddress)
 {
    this.addressM = theAddress;
@@ -109,28 +137,7 @@ K16Memory.prototype.setAddress = function (theAddress)
 
 K16Memory.prototype.read = function ()
 {
-   if ((this.addressM & 0xFC00) == 0x0000)
-   {
-      // RAM 
-      var address = this.addressM & 0x03FF;
-      return this.memoryM[address];
-   }
-   
-   if ((this.addressM & 0xF800) == 0x8000)
-   {
-      // frame buffer
-      var address = this.addressM & 0x07FF;
-      return this.frameBufferM[address];
-   }
-   
-   if ((this.addressM & 0xFFF8) == 0xFFF8)
-   {
-      // IO 
-      var address = this.addressM & 0x0007;
-      return this.ioModuleM.read(address);
-   }
-   
-   return 0xBAD1;
+   return this.inspect(this.addressM);
 };
 
 // ----------------------------------------------------------------------------

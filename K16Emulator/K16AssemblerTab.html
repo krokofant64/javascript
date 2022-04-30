@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="K16Assembler.js"></script>
+
+<script type="text/javascript" src="edit_area/edit_area_loader.js"></script>
+<link rel="stylesheet" href="K16.css">
+</head>
+<body>
+<h1>K16 CPU</h1>
+
+<div class="tab">
+  <a class="tablinks" href="K16.html">Emulator</a>
+  <a class="tablinks" href="K16AssemblerTab.html">Assembler</a>
+  <a class="tablinks" href="K16InstructionSet.html">Help</a>
+  <a class="tablinks" href="K16ExampleCode.html">Examples</a>
+</div>
+<div id="Assembler" class="tabcontent">
+  <p>Source code:</p>
+  <textarea id="assemblyCode" rows="30" style="width: 910px"></textarea>
+  <p><button type="button" onclick="assemble()">Generate Code</button>
+     <button type="button" onclick="verilog()">Generate Verilog</button>
+     <button type="button" onclick="upload()">Upload Code</button>
+  </p>
+  <p>Generated code:</p>
+  <textarea readonly class="code" id="generatedCode" rows="30" style="width: 910px"></textarea>
+</div>
+
+<script>
+function copyCode(theId) 
+{
+   // Get the text field 
+   var copyText = document.getElementById(theId);
+   editAreaLoader.setValue("assemblyCode", copyText.value);
+}
+
+// ----------------------------------------------------------------------------
+
+function assemble()
+{
+   var assemblyCode = editAreaLoader.getValue("assemblyCode");
+   
+   var assembler = new K16Assembler();
+   
+   if (assembler.parse(assemblyCode) == false)
+   {
+      var errorMessage = "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      editAreaLoader.setValue("generatedCode", errorMessage);
+      document.getElementById("generatedCode").value = errorMessage;
+      return undefined
+   }
+   else
+   {
+      var output = "";
+      for (var i = 1; i < assembler.sourceCode.length; i++)
+      {
+         var line = assembler.sourceCode[i];
+         if (line.address != undefined)
+         {
+            output += line.address.toString(16).padStart(4, "0") + " ";
+            output += assembler.code[line.address].toString(16).padStart(4, "0") + " ";
+            output += line.sourceCode;
+            for (var j = 1; j < line.length; j++)
+            {
+               output += (line.address + j).toString(16).padStart(4, "0") + " ";
+               output += assembler.code[line.address + j].toString(16).padStart(4, "0") + "\n";         
+            }
+         }
+         else
+         {
+            output += "          " + line.sourceCode;
+         }
+      }
+      editAreaLoader.setValue("generatedCode", output);
+      document.getElementById("generatedCode").value = output;
+      return assembler;
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function upload()
+{
+   var assembler = assemble();
+   if (assembler != undefined)
+   {
+      for (var address in assembler.code)
+      {
+         memory.setAddress(address);
+         memory.write(assembler.code[address]);
+      }
+   }
+}
+
+// ----------------------------------------------------------------------------
+
+function verilog()
+{
+   var assemblyCode = editAreaLoader.getValue("assemblyCode");
+   
+   var assembler = new K16Assembler();
+   
+   if (assembler.parse(assemblyCode) == false)
+   {
+      var errorMessage = "Error in line " + assembler.line + ": " + assembler.errorMessage;
+      editAreaLoader.setValue("generatedCode", errorMessage);
+      document.getElementById("generatedCode").value = errorMessage;
+      return undefined
+   }
+   else
+   {
+      var output = "";
+      for (var i = 1; i < assembler.sourceCode.length; i++)
+      {
+         var line = assembler.sourceCode[i];
+         if (line.address != undefined)
+         {
+            output += "mem[" + line.address + "] = 16'h";
+            output += assembler.code[line.address].toString(16).padStart(4, "0") + "; // ";
+            output += line.sourceCode;
+            for (var j = 1; j < line.length; j++)
+            {
+               output += "mem[" + (line.address + j) + "] = 16'h";
+               output += assembler.code[line.address + j].toString(16).padStart(4, "0") + ";\n";         
+            }
+         }
+         else
+         {
+            output += "                   // " + line.sourceCode;
+         }
+      }
+      editAreaLoader.setValue("generatedCode", output);
+      document.getElementById("generatedCode").value = output;
+      return assembler;
+   }
+}
+
+editAreaLoader.init(
+{
+   id: "assemblyCode",	// id of the textarea to transform		
+   start_highlight: true,	// if start with highlight
+   font_size: 12,
+   allow_resize: "both",
+   allow_toggle: false,
+   word_wrap: false,
+   language: "en",
+   syntax: "k16",
+   replace_tab_by_spaces: 3,
+   toolbar: "new_document, load, save, | ,search, go_to_line, |, undo, redo, |, select_font, |, change_smooth_selection, highlight, reset_highlight, |, help",
+   load_callback: "loadCode",
+   save_callback: "saveCode"
+});
+
+
+</script>
+
+
+<script>
+</script>
+   
+</body>
+</html> 

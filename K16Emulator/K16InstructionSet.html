@@ -882,8 +882,9 @@ Numberic literals can be expressed in decimal, hexadecimal, octal, or character 
 <h3>Numeric Constants</h3>
 <div class="body">
 Numeric constants are defined with the assembler directive '.define' (see below).
-They consist of a '$' sign followed by letters and digits.</b>
-Labels can also be used as numeric constants.
+They consist of a '$' sign followed by letters and digits.<br>
+Labels can also be used as numeric constants.<br>
+The constant '$$' refers to the current address.
 </div>
 <h3>Operators</h3>
 <div class="body">
@@ -892,6 +893,7 @@ The table below, shows, which operators can be used:
 <tr><th>Precedence</th><th>Operator</th><th>Description</th><th>Associativity</th></tr>
 <tr><td>1</td><td>.H</td><td>Bit 15 .. 8</td><td>Left-to-right</td></tr>
 <tr><td>1</td><td>.L</td><td>Bit 7 .. 0</td><td>Left-to-right</td></tr>
+<tr><td>1</td><td>.O</td><td>Offset from PC</td><td>Left-to-right</td></tr>
 <tr><td>2</td><td>+</td><td>Unary plus</td><td>Right-to-left</td></tr>
 <tr><td>2</td><td>-</td><td>Unary minus</td><td>Right-to-left</td></tr>
 <tr><td>2</td><td>~</td><td>Bitwise not</td><td>Right-to-left</td></tr>
@@ -1017,6 +1019,765 @@ The table below shows the addresses of the LEDs, switches, and some counters:
 <tr><td>0xFFFE</td><td>$IoCntrHi</td><td>Read</td><td>High 16 bit of cycel counter</td></tr>
 </table>
 </div>
+
+<h2>Instruction Set Details</h2>
+<h3>ALU Instructions</h3>
+<h4>ADD - Add</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> + Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + + + -
+</pre>
+Example:
+<pre class="code">
+ ADD R3 R2 R1
+</pre>
+<h4>ADC - Add with carry</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> + Reg<sub>Src2</sub> + Carry
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + + + -
+</pre>
+Example:
+<pre class="code">
+ ADC R5 R4 R1
+</pre>
+<h4>SUB - Subtract</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> - Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + + + -
+</pre>
+Example:
+<pre class="code">
+ SUB R3 R2 R1
+</pre>
+<h4>SBC - Subtract with carry</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> - Reg<sub>Src2</sub> - Carry
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + + + -
+</pre>
+Example:
+<pre class="code">
+ SBC R4 R3 R2
+</pre>
+<h4>AND - Logical AND</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> and Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example:
+<pre class="code">
+ AND R4 R3 R2
+</pre>
+<h4>OR - Logical OR</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> or Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example:
+<pre class="code">
+ OR R3 R2 R1
+</pre>
+<h4>XOR - Logical XOR</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src1</sub> xor Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ XOR R3 R2 R1
+</pre>
+<h4>NOT - Logical NOT</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = not Reg<sub>Src</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: R3 = not R2
+<pre class="code">
+ NOT R3 R2
+</pre>
+<h3>Load from Register Instructions</h3>
+<h4>LD - Load from register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example:
+<pre class="code">
+ LD R3 R1
+</pre>
+<h4>LDL - Load low byte from register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.low = Reg<sub>Src</sub>.low
+ 
+ Reg<sub>Dest</sub>.high = 0
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: R3 = R2.low
+<pre class="code">
+ LDL R3 R2
+</pre>
+<h4>LDH - Load high byte from register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.high = Reg<sub>Src</sub>.low
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDH R3 R2
+</pre>
+<h4>SWP - Load swapped bytes from register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.high = Reg<sub>Src</sub>.low
+ Reg<sub>Dest</sub>.low = Reg<sub>Src</sub>.high
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ SWP R3 R2
+</pre>
+<h3>Other Arithmetic Instructions</h3>
+<h4>INC - Increment register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src</sub> + 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ INC R3 R2
+</pre>
+<h4>DEC - Decrement register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = Reg<sub>Src</sub> - 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ DEC R3 R2
+</pre>
+<h4>CMP - Compare register</h4>
+Operation
+<pre class="code">
+ Reg<sub>Src1</sub> - Reg<sub>Src2</sub>
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + + + -
+</pre>
+Example: 
+<pre class="code">
+ CMP R3 R2
+</pre>
+<table>
+<th>Condition</th><th>Unsigned Compare Flags</th><th>Signed Compare Flags</th>
+<tr>
+<td>Reg<sub>Src1</sub> == Reg<sub>Src2</sub></td>
+<td>Z == 1</td>       
+<td>Z == 1</td>
+</tr>
+<tr>
+<td>Reg<sub>Src1</sub> != Reg<sub>Src2</sub></td>
+<td>Z == 0</td>
+<td>Z == 0</td>
+</tr>
+<tr>
+<td>Reg<sub>Src1</sub> &lt; Reg<sub>Src2</sub></td>
+<td>C == 1</td>
+<td>N != O</td>
+</tr>
+<tr>
+<td>Reg<sub>Src1</sub> &gt;= Reg<sub>Src2</sub></td>
+<td>C == 0</td>
+<td>N == O</td>
+</tr>
+<tr>
+<td>Reg<sub>Src1</sub> &lt<;= Reg<sub>Src2</sub></td>
+<td>Z == 1 or C == 1</td>
+<td>Z == 1 or N != O</td>
+</tr>
+<tr>
+<td>Reg<sub>Src1</sub> &gt;  Reg<sub>Src2</sub></td>
+<td>Z == 0 and C == 0</td>
+<td>Z == 0 and N == O</td>
+</tr>
+</table>
+<h3>Shift Instructions</h3>
+<h4>SHR - Logic shift right</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = SHR(Reg<sub>Src</sub>)
+</pre>
+<img class="sketch" src="SHR.png" alt="SHR - Logic shift right">
+Flags
+<pre class="code">
+ N Z C O I
+ + + + - -
+</pre>
+Example: 
+<pre class="code">
+ SHR R2 R1
+</pre>
+<h4>SHL, ASHL - Logic and arithmetic shift left</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = SHL(Reg<sub>Src</sub>)
+</pre>
+<img class="sketch" src="SHL.png" alt="SHL - Logic shift left">
+Flags
+<pre class="code">
+ N Z C O I
+ + + + - -
+</pre>
+Example: 
+<pre class="code">
+ SHL R2 R1
+</pre>
+<h4>ASHR - Arithmetic shift right</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = ASHR(Reg<sub>Src</sub>)
+</pre>
+<img class="sketch" src="ASR.png" alt="ASR - Arithmetic shift right">
+Flags
+<pre class="code">
+ N Z C O I
+ + + + - -
+</pre>
+Example: 
+<pre class="code">
+ ASHR R2 R1
+</pre>
+<h4>ROR - Rotate right</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = ROR(Reg<sub>Src</sub>)
+</pre>
+<img class="sketch" src="ROR.png" alt="ROR - Rotate right">
+Flags
+<pre class="code">
+ N Z C O I
+ + + + - -
+</pre>
+Example: 
+<pre class="code">
+ ROR R2 R1
+</pre>
+<h4>ROL - Rotate left</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub> = ROL(Reg<sub>Src</sub>)
+</pre>
+<img class="sketch" src="ROL.png" alt="ROL - Rotate left">
+Flags
+<pre class="code">
+ N Z C O I
+ + + + - -
+</pre>
+Example: 
+<pre class="code">
+ ROL R2 R1
+</pre>
+<h3>Flag Manipulation Instructions</h3>
+<h4>CLC - Clear carry flag</h4>
+Operation
+<pre class="code">
+ C = 0
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - 0 - -
+</pre>
+Example: 
+<pre class="code">
+ CLC
+</pre>
+<h4>SEC - Set carry flag</h4>
+Operation
+<pre class="code">
+ C = 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - 1 - -
+</pre>
+Example: 
+<pre class="code">
+ SEC
+</pre>
+<h4>CLI - Clear interrupt enable flag</h4>
+Operation
+<pre class="code">
+ I = 0 
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - 0 -
+</pre>
+Example: 
+<pre class="code">
+ CLI
+</pre>
+<h4>SEI - Set interrupt enable flag</h4>
+Operation
+<pre class="code">
+ I = 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - 1 -
+</pre>
+Example: 
+<pre class="code">
+ SEI
+</pre>
+<h3>Stack Instructions</h3>
+<h4>PSH - Push to stack</h4>
+Operation
+<pre class="code">
+ mem[SP] = Reg<sub>Src</sub>
+ SP = SP - 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ PSH R4
+</pre>
+<h4> OP - Pop from stack</h4>
+Operation
+<pre class="code">
+ SP = SP + 1
+ Reg<sub>Dest</sub> = mem[SP]
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ POP R4
+</pre>
+<h4>RET - Return from subroutine</h4>
+Operation
+<pre class="code">
+ SP = SP + 1
+ PC = mem[SP]
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ RET
+</pre>
+<h4>RTI - Return from interrupt</h4>
+Operation
+<pre class="code">
+ SP = SP + 1
+ PC = mem[SP]
+ I = 1
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - 1
+</pre>
+Example: 
+<pre class="code">
+ RET
+</pre>
+<h3>Conditional Branch Instructions</h3>
+<h4>BCS - Branch if carry flag is set</h4>
+Operation
+<pre class="code">
+ if C == 1 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BCS PC +5
+</pre>
+<h4>BCC - Branch if carry flag is clear</h4>
+Operation
+<pre class="code">
+ if C == 0 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BCC R2 +17
+</pre>
+<h4>BZS - Branch if zero flag is set</h4>
+Operation
+<pre class="code">
+ if Z == 1 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BZS PC +5
+</pre>
+
+<h4>BZC - Branch if zero flag is clear</h4>
+Operation
+<pre class="code">
+ if Z == 0 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BZC R2 +17
+</pre>
+<h4>BNS - Branch if negative flag is set</h4>
+Operation
+<pre class="code">
+ if N == 1 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BNS PC +5
+</pre>
+<h4>BNC - Branch if negative flag is clear</h4>
+Operation
+<pre class="code">
+ if N == 0 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BNC R2 +17
+</pre>
+<h4>BOS - Branch if overflow flag is set</h4>
+Operation
+<pre class="code">
+ if O == 1 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BOS PC +5
+</pre>
+<h4>BOC - Branch if overflow flag is clear</h4>
+Operation
+<pre class="code">
+ if O == 0 then
+    if R_base == PC then
+       PC = PC + 1 + offset
+    else
+       PC = R_base + offset
+    endif
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ BOC R2 +17
+</pre>
+<h3>Load Immediate Value Instructions</h3>
+<h4>LDL - Load low byte from immediate value</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.low = immediate
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDL R4 128
+</pre>
+<h4>LDH - Load high byte from immediate value</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.high = immediate
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDL R4 128
+</pre>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.low = immediate
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDH R4 16
+</pre>
+<h4>LDLZ - Load low byte from immediate value and clear high byte</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.low = immediate
+ Reg<sub>Dest</sub>.high = 0
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDLZ R4 128
+</pre>
+<h4>LDHZ - Load high byte from immediate value and clear low byte</h4>
+Operation
+<pre class="code">
+ Reg<sub>Dest</sub>.low = 0
+ Reg<sub>Dest</sub>.high = immediate
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LDHZ R4 128
+</pre>
+<h3>Jump Instruction</h3>
+<h4>JMP - Jump</h4>
+Operation
+<pre class="code">
+ if R_base == PC then
+    PC = PC + 1 + offset
+ else
+    PC = R_base + offset
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ JMP R3 127
+</pre>
+<h3>Jump to Subroutine Instruction</h3>
+<h4>JSR - Jump to subroutine</h4>
+Operation
+<pre class="code">
+ mem[SP] = PC + 1
+ SP = SP - 1
+ if R_base == PC then
+    PC = PC + 1 + offset
+ else
+    PC = R_base + offset
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ JSR R3 127
+</pre>
+<h3>Load from Memory Instruction</h3>
+<h4>LD - Load from memory</h4>
+Operation
+<pre class="code">
+ if R_base == PC then
+    Reg<sub>Dest</sub> = mem[PC + 1 + offset]
+ else
+    Reg<sub>Dest</sub> = mem[R_base + offset]
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ + + - - -
+</pre>
+Example: 
+<pre class="code">
+ LD R4 [SP -2]
+</pre>
+<h3>Store in Memory Instruction</h3>
+<h4>STO - Store in memory</h4>
+Operation
+<pre class="code">
+ if R_base == PC then
+    mem[PC + 1 + offset] = Reg<sub>Src</sub>
+ else
+    mem[R_base + offset] = Reg<sub>Src</sub>
+ endif
+</pre>
+Flags
+<pre class="code">
+ N Z C O I
+ - - - - -
+</pre>
+Example: 
+<pre class="code">
+ STO R3 [R2 +18]
+</pre>
+
 </body>
 </html>
 

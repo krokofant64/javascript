@@ -53,6 +53,25 @@ table {
   margin: 8px;
 }
 
+table.registers {
+   font-family: monospace;
+   font-size: 14px;
+   margin: 4px
+}
+
+table.memory {
+   font-family: monospace;
+   font-size: 14px;
+   margin: 4px;
+   width: 515px;
+}
+
+table.debugSource {
+   font-family: monospace;
+   font-size: 14px;
+   margin: 4px
+}
+
 td{
   border: 1px solid #111111;
   text-align: left;
@@ -61,6 +80,55 @@ td{
 
 td.instruction {
    font-weight: bold;
+}
+
+td.dbgSrc {
+   font-family: monospace;
+   font-size: 12px;
+   margin: 4px;
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+td.dbgAddr {
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+td.dbgInstr {
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+td.alignRight {
+   text-align: right;
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+td.alignLeft {
+   text-align: left;
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+td.verticalHeading {
+   writing-mode: vertical-rl; 
+   text-orientation: sideways; 
+   width: 18px;
+   border-right: none;
+}
+
+th.alignRight {
+   text-align: right;
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+th.alignLeft {
+   text-align: left;
+   padding-top: 4px;
+   padding-bottom: 4px;
 }
 
 th {
@@ -113,6 +181,29 @@ tr:nth-child(even) {
 }
 
 /* Style the buttons inside the tab */
+.tab a {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 10px;
+  transition: 0.3s;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+/* Change background color of buttons on hover */
+.tab a:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab a.active {
+  background-color: #ccc;
+}
+
+/* Style the buttons inside the tab */
 .tab button {
   background-color: inherit;
   float: left;
@@ -122,6 +213,7 @@ tr:nth-child(even) {
   padding: 10px 10px;
   transition: 0.3s;
   font-size: 14px;
+  text-decoration: none;
 }
 
 /* Change background color of buttons on hover */
@@ -140,6 +232,13 @@ tr:nth-child(even) {
   padding: 6px 12px;
 }
 
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+} 
+
 .code {
    font-size: 12px;
    box-sizing: border-box;
@@ -150,6 +249,11 @@ tr:nth-child(even) {
    line-height: 100%;
    padding: 7px;
    width: 910px;
+}
+
+.debugSource {
+   font-family: monospace;
+   white-space: pre;
 }
 
 .body {
@@ -174,5 +278,4 @@ tr:nth-child(even) {
    padding: 8px;
    width: 910px;
 }
-
 
