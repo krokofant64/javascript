@@ -18,6 +18,8 @@ var ExamineRegisterC = 6;
 var DepositC         = 7;
 var DepositNextC     = 8;
 var DepositRegisterC = 9;
+var StopC            = 11;
+var ResetC           = 12;
 
 // ----------------------------------------------------------------------------
 

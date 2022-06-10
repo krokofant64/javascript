@@ -739,7 +739,202 @@ PixelBlockLoop:  STO R2 [R3]
                  RET
 
 </textarea>
+<h4><button onclick="copyCode('testCpu')">Copy code</button> Test CPU:</h4>
+<textarea class="code" id="testCpu" rows="20" style="width: 910px" readonly>
+               LDHZ SP 0x02 ; Set SP to 0x0200
+               JMP Start
+                          
+TestOk:        .data 0
 
+Start:         LDL R5 Error.L
+               LDH R5 Error.H
+               
+               LDL R1 Operand1_1.L     ; Test ADD
+               LDH R1 Operand1_1.H
+               LD R1 [R1]
+               LDL R2 Operand2_1.L
+               LDH R2 Operand2_1.H
+               LD R2 [R2]
+               SEC
+               ADD R3 R1 R2
+               LDL R4 Result_Add_1.L
+               LDH R4 Result_Add_1.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+              
+               CLC                     ; Test ADC - Carry 0
+               ADC R3 R1 R2
+               LDL R4 Result_Add_1.L
+               LDH R4 Result_Add_1.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+               
+               SEC                     ; Test ADC - Carry 1
+               ADC R3 R1 R2
+               LDL R4 Result_Add_2.L
+               LDH R4 Result_Add_2.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+                 
+               SEC                     ; Test SUB
+               SUB R3 R1 R2
+               LDL R4 Result_Sub_1.L
+               LDH R4 Result_Sub_1.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+               
+               CLC                     ; Test SBC - Carry 0
+               SBC R3 R1 R2
+               LDL R4 Result_Sub_1.L
+               LDH R4 Result_Sub_1.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+               
+               SEC                     ; Test SBC - Carry 1
+               SBC R3 R1 R2
+               LDL R4 Result_Sub_2.L
+               LDH R4 Result_Sub_2.H 
+               LD R4 [R4]
+               CMP R3 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_1.L     ; Test LD
+               LDH R1 Operand1_1.H
+               LD R1 [R1]
+               LD R2 R1
+               LDL R4 Operand1_1.L
+               LDH R4 Operand1_1.H
+               LD R4 [R4]
+               CMP R2 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test LDL
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               LDL R2 Operand2_2.L
+               LDH R2 Operand2_2.H
+               LD R2 [R2]
+               LDL R1 R2
+               LDL R4 Result_Ldl_1.L
+               LDH R4 Result_Ldl_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test LDH
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               LDL R2 Operand2_2.L
+               LDH R2 Operand2_2.H
+               LD R2 [R2]
+               LDH R1 R2
+               LDL R4 Result_Ldh_1.L
+               LDH R4 Result_Ldh_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test LDL imm
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               LDL R1 0x12
+               LDL R4 Result_Ldl_1.L
+               LDH R4 Result_Ldl_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test LDH imm
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               LDH R1 0x12
+               LDL R4 Result_Ldh_1.L
+               LDH R4 Result_Ldh_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDLZ R1 0xAB            ; Test LDLZ imm
+               LDL R4 Result_Ldlz_1.L
+               LDH R4 Result_Ldlz_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDHZ R1 0xBA            ; Test LDHZ imm
+               LDL R4 Result_Ldhz_1.L
+               LDH R4 Result_Ldhz_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test SWP
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               SWP R1 R1
+               LDL R4 Result_Swp_1.L
+               LDH R4 Result_Swp_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+               LDL R1 Operand1_2.L     ; Test INC
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               INC R1 R1
+               LDL R4 Result_Inc_1.L
+               LDH R4 Result_Inc_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+
+               LDL R1 Operand1_2.L     ; Test DEC
+               LDH R1 Operand1_2.H
+               LD R1 [R1]
+               DEC R1 R1
+               LDL R4 Result_Dec_1.L
+               LDH R4 Result_Dec_1.H
+               LD R4 [R4]
+               CMP R1 R4
+               BZC [R5]
+               
+
+               ; Test succeeded
+               LDL R4 TestOk.L
+               LDH R4 TestOk.H
+               LDL R5 0x34
+               LDH R5 0x12
+               STO R5 [R4]
+               HLT
+       
+Error:         ; Test failed
+               LDL R4 TestOk.L
+               LDH R4 TestOk.H
+               LDLZ R5 0
+               STO R5 [R4]
+               HLT
+            
+Operand1_1:    .data 100
+Operand2_1:    .data 13
+Operand1_2:    .data 0xFEDC
+Operand2_2:    .data 0x12
+Result_Add_1:  .data 100 + 13
+Result_Add_2:  .data 100 + 13 + 1
+Result_Sub_1:  .data 100 - 13
+Result_Sub_2:  .data 100 - 13 - 1
+Result_Ldl_1:  .data 0xFE12
+Result_Ldh_1:  .data 0x12DC
+Result_Ldlz_1: .data 0x00AB
+Result_Ldhz_1: .data 0xBA00
+Result_Swp_1:  .data 0xDCFE
+Result_Inc_1:  .data 0xFEDC + 1
+Result_Dec_1:  .data 0xFEDC - 1
+</textarea>
 </body>
 </html>
 

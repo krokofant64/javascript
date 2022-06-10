@@ -409,6 +409,41 @@ K16Io.prototype.translateCtrlSwitches = function ()
 
 // ----------------------------------------------------------------------------
 
+K16Io.prototype.setDebugSwitch = function (theSwitch)
+{
+   switch (theSwitch)
+   {
+      case StartC:
+      {
+         this.ctrlSwitches = 0x0800;
+         break;
+      }
+      case ContinueC:
+      {
+         this.ctrlSwitches = 0x0400;
+         break;
+      }
+      case InstStepC:
+      {
+         this.ctrlSwitches = 0x0010;
+         break;
+      }
+      case StopC:
+      {
+         this.ctrlSwitches = 0x1000;
+         break;
+      }
+      case ResetC:
+      {
+         this.ctrlSwitches = 0x2000;
+         break;
+      }
+   }
+}
+
+
+// ----------------------------------------------------------------------------
+
 K16Io.prototype.write = function (theAddress, theData)
 {
    switch (theAddress)

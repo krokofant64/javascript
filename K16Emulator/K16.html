@@ -11,7 +11,7 @@
 <script type="text/javascript" src="edit_area/edit_area_loader.js"></script>
 <link rel="stylesheet" href="K16.css">
 </head>
-<body>
+<body onunload="onUnload()" onload="onLoad()">
 <h1>K16 CPU</h1>
 
 <div class="tab">
@@ -27,7 +27,8 @@
     Your browser does not support the canvas element.
   </canvas>
 </p>
-<table id="debugger" style="display:none; width:725px">
+<div id="debugger" style="display:none">
+<table style="width:725px">
 <tr>
    <td class="verticalHeading">Registers</td>
    <td style="width: 113px; border-left: none;">
@@ -76,6 +77,15 @@
    </td>
 </tr>
 </table>
+<div class="tab" style="width:725px">
+  <button class="tablinks" onclick="ioModule.setDebugSwitch(ResetC)">Reset</button>
+  <button class="tablinks" onclick="ioModule.setDebugSwitch(StartC)">Start</button>
+  <button class="tablinks" onclick="ioModule.setDebugSwitch(StopC);">Stop</button>
+  <button class="tablinks" onclick="ioModule.setDebugSwitch(ContinueC)">Continue</button>
+  <button class="tablinks" onclick="ioModule.setDebugSwitch(InstStepC)">Step</button>
+  <button class="tablinks" onclick="toggleElement('debugger')" style="position: absolute; left: 625px">Close Debugger</button>
+</div>
+</div>
 <p>
   <canvas style="background-image: url('./K16FrontPanel.png')" id="panel" width="739" height="419">
   Your browser does not support the canvas element.
@@ -99,6 +109,22 @@
 <div id="Examples" class="tabcontent" w3-include-html="./K16ExampleCode.html"></div>
 
 <script>
+
+
+function onUnload()
+{
+   localStorage.setItem("K16-Current", editAreaLoader.getValue("assemblyCode"));
+}
+
+function onLoad()
+{
+   if ("K16-Current" in localStorage)
+   {
+      var code = localStorage.getItem("K16-Current");
+      editAreaLoader.setValue("assemblyCode", code);
+   }
+}
+
 function includeHTML() 
 {
    var z, i, elmnt, file, xhttp;

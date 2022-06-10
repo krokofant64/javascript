@@ -276,6 +276,7 @@ K16Assembler.prototype.getOffset = function (theLabel, theMask)
    else
    {
       // Label not found
+      this.errorMessage = "Label \"" + theLabel + "\" is undefined."
       return undefined;
    }
 };
@@ -350,7 +351,7 @@ K16Assembler.prototype.nextChar = function ()
 K16Assembler.prototype.offsetFromLabel = function (theLabel, theAddress, theMask)
 {
    var offset = theLabel.address - (theAddress + 1);
-   var notMask = ~theMask;
+   var notMask = ~(theMask >> 1);
    var extra = offset & notMask;
    if (offset & 0x8000)
    {
@@ -358,8 +359,8 @@ K16Assembler.prototype.offsetFromLabel = function (theLabel, theAddress, theMask
       if (extra != notMask)
       {
          this.errorMessage = "Label \"" + theLabel.name + 
-                             "\" is too far from caller at address " + 
-                             theLabel.address + ".";
+                             "\" at address " + theLabel.address + " is too far from caller at address " + 
+                             theAddress + ".";
          return undefined;
       }
    }
@@ -369,8 +370,8 @@ K16Assembler.prototype.offsetFromLabel = function (theLabel, theAddress, theMask
       if (extra != 0)
       {
          this.errorMessage = "Label \"" + theLabel.name + 
-                             "\" is too far from caller at address " + 
-                             theLabel.addres + ".";
+                             "\" at address " + theLabel.address + " is too far from caller at address " + 
+                             theAddress + ".";
          return undefined;
       }
    }
@@ -445,7 +446,6 @@ K16Assembler.prototype.parseAddress = function (theOffsetMask)
          {
             if (this.finalPass == true)
             {
-               this.errorMessage = "Label \"" + identifier + "\" is undefined.";
                return;
             }
             result.offset = 0;
@@ -1485,7 +1485,6 @@ K16Assembler.prototype.parseReg2Offs7 = function (theCode)
          return theCode;
       }
    }
-   this.errorMessage = "Arguments R_base +-offset expected.";
    return undefined;
 };
 
@@ -1582,7 +1581,6 @@ K16Assembler.prototype.parseReg32Offs7 = function (theCode)
          }
       }
    }
-   this.errorMessage = "Arguments R_dest [R_src +-offset] expected.";
    return undefined;
 };
 
@@ -1749,6 +1747,7 @@ K16Assembler.prototype.storeLabel = function (theLabel)
          var label = {};
          label.line = this.line;
          label.address = this.currentAddress;
+         label.name = theLabel;
          this.labelMap[theLabel] = label;
       }
    }
